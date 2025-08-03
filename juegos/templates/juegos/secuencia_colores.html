@@ -1111,7 +1111,7 @@ class ColorSequenceGame {
             
             for (const format of formats) {
                 try {
-                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    audio.src = `${window.STATIC_URL}sounds/${audioFile}.${format}`;
                     this.gameAudio[key] = audio;
                     break;
                 } catch (e) {
@@ -1396,7 +1396,7 @@ class ColorSequenceGame {
                 if (formatIndex >= formats.length || loaded) return;
                 
                 const format = formats[formatIndex];
-                const audioUrl = `/static/sounds/${color.audioFile}.${format}`;
+                const audioUrl = `${window.STATIC_URL}sounds/${color.audioFile}.${format}`;
                 
                 console.log(`🔍 Intentando cargar: ${audioUrl}`);
                 audio.src = audioUrl;

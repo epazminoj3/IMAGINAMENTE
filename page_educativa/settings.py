@@ -79,13 +79,23 @@ WSGI_APPLICATION = 'page_educativa.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Configuración de base de datos usando DATABASE_URL
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://postgres:postgres@localhost/postgres',
-        conn_max_age=600
-    )
-}
+# Configuración de base de datos
+if DEBUG:
+    # SQLite para desarrollo local
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+else:
+    # PostgreSQL para producción usando DATABASE_URL
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgresql://postgres:postgres@localhost/postgres',
+            conn_max_age=600
+        )
+    }
 
 
 
@@ -124,22 +134,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Directorios de archivos estáticos
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'media'),  # Incluir media como estáticos
+]
+
+# Configuración de WhiteNoise
 if not DEBUG:
-    # Para producción
-    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    # Configuración de WhiteNoise para archivos estáticos
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-else:
-    # Para desarrollo
-    STATICFILES_DIRS = [
-        os.path.join(BASE_DIR, 'static'),
-    ]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Media files
+# Media files (para compatibilidad con URLs)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

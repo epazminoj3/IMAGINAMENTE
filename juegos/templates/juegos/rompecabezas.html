@@ -1639,7 +1639,7 @@ class PuzzleGame {
             
             for (const format of formats) {
                 try {
-                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    audio.src = `${window.STATIC_URL}sounds/${audioFile}.${format}`;
                     this.gameAudio[key] = audio;
                     break;
                 } catch (e) {

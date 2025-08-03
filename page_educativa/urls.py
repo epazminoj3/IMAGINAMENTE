@@ -25,6 +25,7 @@ urlpatterns = [
     path('', include('juegos.urls')),  # Aquí conectas tu app
 ]
 
+# Servir archivos estáticos y media en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

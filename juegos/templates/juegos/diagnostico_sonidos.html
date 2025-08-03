@@ -93,7 +93,7 @@
     <div class="test-section">
         <h3>📁 Información de Archivos</h3>
         <div class="file-list">
-            <strong>Archivos requeridos en /static/sounds/:</strong><br>
+            <strong>Archivos requeridos en ${window.STATIC_URL}sounds/:</strong><br>
             ✅ perro.mp3 (para 🐶)<br>
             ✅ gato.mp3 (para 🐱)<br>
             ✅ vaca.mp3 (para 🐮)<br>
@@ -169,7 +169,7 @@
             }
             
             const format = formats[currentFormat];
-            const url = `/static/sounds/${animal}.${format}`;
+            const url = `${window.STATIC_URL}sounds/${animal}.${format}`;
             
             log(`🔄 Probando: ${url}`);
             updateStatus(`🔄 ${emoji} Probando ${animal}.${format}...`, 'info');
@@ -219,11 +219,11 @@
     // Información técnica
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('baseUrl').textContent = window.location.origin;
-        document.getElementById('expectedPath').textContent = window.location.origin + '/static/sounds/[animal].mp3';
+        document.getElementById('expectedPath').textContent = window.location.origin + '${window.STATIC_URL}sounds/[animal].mp3';
         
         log('🚀 Diagnóstico iniciado');
         log(`🌐 URL base: ${window.location.origin}`);
-        log(`📁 Ruta static esperada: ${window.location.origin}/static/sounds/`);
+        log(`📁 Ruta static esperada: ${window.location.origin}${window.STATIC_URL}sounds/`);
     });
 </script>
 {% endblock %}

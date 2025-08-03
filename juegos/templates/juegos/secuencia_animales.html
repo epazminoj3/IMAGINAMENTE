@@ -1097,7 +1097,7 @@ class AnimalSequenceGame {
             
             for (const format of formats) {
                 try {
-                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    audio.src = `${window.STATIC_URL}sounds/${audioFile}.${format}`;
                     this.gameAudio[key] = audio;
                     break;
                 } catch (e) {
@@ -1400,7 +1400,7 @@ class AnimalSequenceGame {
                 if (formatIndex >= formats.length || loaded) return;
                 
                 const format = formats[formatIndex];
-                const audioUrl = `/static/sounds/${animal.audioFile}.${format}`;
+                const audioUrl = `${window.STATIC_URL}sounds/${animal.audioFile}.${format}`;
                 
                 console.log(`🔍 Intentando cargar: ${audioUrl}`);
                 audio.src = audioUrl;

@@ -1,4 +1,5 @@
 {% extends 'juegos/base.html' %}
+{% load static %}
 
 {% block title %}🌈 Imaginamente - Juegos Educativos 🌈{% endblock %}
 
@@ -227,7 +228,7 @@
     <a href="{% url 'juegos:secuencia_animales' %}" class="game-card">
         <div class="game-image">
             <!-- Aquí puedes poner tu GIF -->
-            <img src="/static/images/secuencia_animales.png" alt="Secuencia de Animales" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵🐾</div>'">
+            <img src="{% static 'images/secuencia_animales.png' %}" alt="Secuencia de Animales" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵🐾</div>'">
         </div>
         <h2 class="game-title">Secuencia de Animales</h2>
         <p class="game-description">
@@ -240,7 +241,7 @@
     <!-- Juego de Colores -->
     <a href="{% url 'juegos:secuencia_colores' %}" class="game-card">
         <div class="game-image">
-            <img src="/static/images/secuencia-colores.png" alt="Secuencia de Colores" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵</div>'">
+            <img src="{% static 'images/secuencia-colores.png' %}" alt="Secuencia de Colores" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵</div>'">
         </div>
         <h2 class="game-title">Secuencia de Colores</h2>
         <p class="game-description">
@@ -253,7 +254,7 @@
     <!-- Juego de Eventos -->
     <a href="{% url 'juegos:secuencia_eventos' %}" class="game-card">
         <div class="game-image">
-            <img src="/static/images/secuencia-eventos.png" alt="Secuencia de Eventos" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>📚⏰</div>'">
+            <img src="{% static 'images/secuencia-eventos.png' %}" alt="Secuencia de Eventos" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>📚⏰</div>'">
         </div>
         <h2 class="game-title">Secuencia de Eventos</h2>
         <p class="game-description">
@@ -265,7 +266,7 @@
     <!-- Juego de Memoria de Cartas -->
     <a href="{% url 'juegos:memoria_cartas' %}" class="game-card">
         <div class="game-image">
-            <img src="/static/images/memoria-cartas.png" alt="Memoria de Cartas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧠💝</div>'">
+            <img src="{% static 'images/memoria-cartas.png' %}" alt="Memoria de Cartas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧠💝</div>'">
         </div>
         <h2 class="game-title">Memoria de Cartas</h2>
         <p class="game-description">
@@ -277,7 +278,7 @@
     <!-- Juego de Rompecabezas -->
     <a href="{% url 'juegos:rompecabezas' %}" class="game-card">
         <div class="game-image">
-            <img src="/static/images/rompecabezas.png" alt="Rompecabezas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧩🖼️</div>'">
+            <img src="{% static 'images/rompecabezas.png' %}" alt="Rompecabezas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧩🖼️</div>'">
         </div>
         <h2 class="game-title">Rompecabezas</h2>
         <p class="game-description">
