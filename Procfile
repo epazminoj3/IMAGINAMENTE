@@ -1,0 +1,1 @@
+web: gunicorn page_educativa.wsgi:application
