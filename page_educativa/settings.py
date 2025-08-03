@@ -139,12 +139,14 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Directorios de archivos estáticos
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'media'),  # Incluir media como estáticos
 ]
 
 # Configuración de WhiteNoise
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configuración adicional de WhiteNoise para servir media files
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
