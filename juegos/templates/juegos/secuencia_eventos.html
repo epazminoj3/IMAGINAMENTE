@@ -1,0 +1,2413 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}📚⏰ Secuencia de Eventos - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 5px solid #9B59B6;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2rem, 5vw, 3rem);
+        background: linear-gradient(45deg, #9B59B6, #E74C3C, #F39C12, #2ECC71, #3498DB, #E67E22);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+    }
+    
+    .game-instructions {
+        font-size: 1.2rem;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    /* Pantalla de Inicio */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.1), rgba(52, 152, 219, 0.1));
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        border: 3px solid #9B59B6;
+    }
+    
+    .start-content h2 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        color: #9B59B6;
+        margin-bottom: 1rem;
+    }
+    
+    .start-content p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+    
+    .start-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .start-button, .instructions-button {
+        background: linear-gradient(45deg, #9B59B6, #8E44AD);
+        color: white;
+        border: none;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+        font-family: 'Fredoka One', cursive;
+    }
+    
+    .instructions-button {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+    }
+    
+    .start-button:hover, .instructions-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    /* Modal de Instrucciones */
+    .instructions-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .instructions-modal.show {
+        opacity: 1;
+    }
+    
+    .instructions-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        transform: scale(0.7);
+        transition: transform 0.3s ease;
+    }
+    
+    .instructions-modal.show .instructions-content {
+        transform: scale(1);
+    }
+    
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+    
+    .instructions-header h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.8rem;
+        color: #9B59B6;
+        margin: 0;
+    }
+    
+    .close-btn {
+        background: #ff4757;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        background: #9B59B6;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .step-text h4 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+    
+    .step-text p {
+        margin: 0;
+        color: #666;
+    }
+    
+    .drag-demo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+    
+    .demo-event {
+        background: linear-gradient(45deg, #9B59B6, #3498DB);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        border: 3px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        transition: transform 0.5s ease;
+        cursor: pointer;
+    }
+    
+    .demo-arrow {
+        font-size: 1.5rem;
+        color: #9B59B6;
+    }
+    
+    .demo-slot {
+        width: 100px;
+        height: 60px;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 0.8rem;
+        color: #999;
+        text-align: center;
+    }
+    
+    .demo-slot.filled {
+        border-color: #9B59B6;
+        background: rgba(155, 89, 182, 0.1);
+    }
+    
+    .instructions-footer {
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+    
+    /* Indicador de Nivel Compacto */
+    .level-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #9B59B6, #8E44AD);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    /* Área del Juego */
+    .game-area {
+        display: block;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .event-title {
+        text-align: center;
+        font-family: 'Fredoka One', cursive;
+        font-size: 2rem;
+        color: #9B59B6;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(155, 89, 182, 0.1);
+        border-radius: 15px;
+        border: 3px solid #9B59B6;
+    }
+    
+    .event-description {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #666;
+        margin-bottom: 30px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 10px;
+    }
+    
+    .phases-section {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 3px solid #3498DB;
+    }
+    
+    .phases-section h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #3498DB;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .show-sequence-btn {
+        background: linear-gradient(45deg, #E74C3C, #C0392B);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        font-family: 'Fredoka One', cursive;
+        display: block;
+        margin: 20px auto;
+    }
+    
+    .show-sequence-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+    
+    .sequence-display {
+        display: none;
+        background: rgba(241, 196, 15, 0.1);
+        border: 3px solid #F1C40F;
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .sequence-display h4 {
+        font-family: 'Fredoka One', cursive;
+        color: #F39C12;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .sequence-preview {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    
+    .preview-step {
+        background: white;
+        border: 2px solid #F39C12;
+        border-radius: 10px;
+        padding: 18px;
+        text-align: center;
+        min-width: 135px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .step-number-preview {
+        background: #F39C12;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin: 0 auto 8px;
+        font-size: 0.9rem;
+    }
+    
+    .step-emoji {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .step-image {
+        width: 65px;
+        height: 65px;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 0 auto 8px;
+        border: 2px solid #F39C12;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .step-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+    
+    .step-name {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .sorting-section {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 20px;
+        border: 3px solid #2ECC71;
+    }
+    
+    .sorting-section h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #2ECC71;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .events-container {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+    }
+    
+    .event-item {
+        background: white;
+        border-radius: 15px;
+        padding: 18px;
+        text-align: center;
+        cursor: grab;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        user-select: none;
+        min-width: 135px;
+        max-width: 165px;
+        touch-action: none;
+    }
+    
+    .event-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        border-color: #9B59B6;
+    }
+    
+    .event-item:active {
+        cursor: grabbing;
+        transform: scale(0.95);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .event-item.dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+
+    .event-item.selected {
+        border-color: #FFD700 !important;
+        background: rgba(255, 215, 0, 0.1) !important;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.5) !important;
+        transform: scale(1.05);
+    }
+    
+    .event-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .event-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .event-emoji {
+        font-size: 2rem;
+        margin-bottom: 8px;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .event-name {
+        font-weight: 700;
+        color: #333;
+        font-size: 0.9rem;
+        line-height: 1.2;
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .sequence-area {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 20px;
+        border: 3px solid #E74C3C;
+        margin-top: 20px;
+    }
+    
+    .sequence-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #E74C3C;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .sequence-title.correct {
+        color: #2ECC71;
+        animation: celebrate 0.6s ease-in-out;
+    }
+    
+    .sequence-slots {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        min-height: 120px;
+    }
+    
+    .sequence-slot {
+        background: rgba(255, 255, 255, 0.5);
+        border: 3px dashed #ccc;
+        border-radius: 15px;
+        padding: 18px;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-width: 135px;
+        min-height: 115px;
+        position: relative;
+        cursor: pointer;
+        touch-action: none;
+    }
+    
+    .sequence-slot .slot-number {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        background: #3498DB;
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        pointer-events: none;
+        user-select: none;
+        z-index: 1;
+    }
+
+    .sequence-slot .drop-area {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 10;
+        min-height: 80px;
+    }
+    
+    .sequence-slot.drag-over {
+        border-color: #9B59B6 !important;
+        background: rgba(155, 89, 182, 0.3) !important;
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(155, 89, 182, 0.5);
+    }
+    
+    .sequence-slot.incorrect {
+        border-color: #E74C3C;
+        background: rgba(231, 76, 60, 0.2);
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        display: none;
+    }
+    
+    .control-btn.show {
+        display: inline-block;
+    }
+    
+    .control-btn.reset {
+        background: linear-gradient(45deg, #E74C3C, #C0392B);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        font-size: 1.5rem;
+        display: none !important;
+    }
+    
+    .control-btn.reset.show {
+        display: block !important;
+    }
+    
+    .feedback {
+        text-align: center;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 20px 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        display: none;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+        display: block;
+    }
+    
+    .feedback.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #196F3D;
+        border: 2px solid #2ECC71;
+    }
+    
+    .feedback.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #922B21;
+        border: 2px solid #E74C3C;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .celebrate {
+        animation: celebrate 0.6s ease-in-out 3;
+    }
+    
+    /* Ocultar footer durante el juego */
+    .game-active footer {
+        display: none !important;
+    }
+    
+    /* Modal de finalización del juego */
+    .completion-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .completion-modal.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .completion-modal-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 40px;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        animation: completionSlideIn 0.5s ease;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    @keyframes completionSlideIn {
+        from {
+            transform: scale(0.5) translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .completion-modal-content h3 {
+        color: white;
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        animation: celebrate 1s ease-in-out infinite;
+    }
+
+    .completion-message {
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .completion-message p {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .final-score {
+        background: rgba(255,255,255,0.2);
+        border-radius: 15px;
+        padding: 15px;
+        font-size: 1.4rem;
+        font-weight: bold;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .completion-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .completion-btn {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        min-width: 180px;
+    }
+
+    .completion-btn.play-again {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+    }
+
+    .completion-btn.go-home {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+    }
+
+    .completion-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .completion-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Modal de secuencia inicial */
+    .sequence-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .sequence-modal.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .sequence-modal-content {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 90%;
+        max-height: 80%;
+        overflow-y: auto;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            transform: scale(0.8) translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .sequence-modal-content h3 {
+        color: #E74C3C;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+    }
+
+    .sequence-modal-preview {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 15px;
+    }
+
+    .sequence-modal-preview .preview-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: white;
+        border-radius: 15px;
+        padding: 15px;
+        border: 3px solid #E74C3C;
+        min-width: 100px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .ready-button {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+    }
+
+    .ready-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    /* Botón de pista pequeño */
+    .hint-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+        color: white;
+        border: none;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hint-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(52, 152, 219, 0.6);
+    }
+
+    .hint-button:active {
+        transform: scale(0.95);
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hint-button {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            bottom: 15px;
+            left: 15px;
+        }
+
+        .sequence-modal-content {
+            padding: 20px;
+            max-width: 95%;
+        }
+
+        .sequence-modal-content h3 {
+            font-size: 1.4rem;
+        }
+
+        .sequence-modal-preview {
+            gap: 10px;
+            padding: 15px;
+        }
+
+        .sequence-modal-preview .preview-step {
+            min-width: 80px;
+            padding: 10px;
+        }
+
+        .ready-button {
+            padding: 12px 20px;
+            font-size: 1rem;
+        }
+
+        .completion-modal-content {
+            padding: 25px;
+            max-width: 95%;
+        }
+
+        .completion-modal-content h3 {
+            font-size: 2rem;
+        }
+
+        .completion-message p {
+            font-size: 1.1rem;
+        }
+
+        .final-score {
+            font-size: 1.2rem;
+            padding: 12px;
+        }
+
+        .completion-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .completion-btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+
+        .game-container {
+            max-width: 95%;
+            padding: 10px;
+            margin: 5px auto;
+        }
+        
+        /* Layout de dos columnas solo para móvil */
+        .game-area {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .sorting-section {
+            flex: 1;
+            min-width: 45%;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 10px;
+            border: 3px solid #2ECC71;
+            margin-bottom: 0; /* Quitar margen inferior en móvil */
+        }
+        
+        .sequence-area {
+            flex: 1;
+            min-width: 45%;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 10px;
+            border: 3px solid #3498DB;
+            margin-top: 0; /* Quitar margen superior en móvil */
+        }
+        
+        .sorting-section h3 {
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .sequence-title {
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .events-container {
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .event-item {
+            min-width: 100px;
+            max-width: 120px;
+            padding: 8px;
+        }
+        
+        .event-image {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .sequence-slots {
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .sequence-slot {
+            min-width: 100px;
+            min-height: 80px;
+            padding: 10px;
+        }
+        
+        .event-emoji {
+            font-size: 1.5rem;
+        }
+        
+        .event-name {
+            font-size: 0.8rem;
+        }
+        
+        .level-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 5px auto;
+            display: block !important;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+        
+        .instructions-content {
+            padding: 1.5rem;
+            max-width: 95%;
+            margin: 10px;
+        }
+        
+        .start-button, .instructions-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        
+        .control-btn.reset {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            font-size: 1.2rem;
+        }
+        
+        .control-btn.reset.show {
+            display: block !important;
+        }
+        
+        .feedback {
+            font-size: 0.9rem;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+        }
+        
+        .game-instructions {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .event-title {
+            font-size: 1.5rem;
+        }
+
+        .sorting-section h3 {
+            font-size: 1.2rem;
+        }
+
+        .sequence-title {
+            font-size: 1.2rem;
+        }
+        
+        .preview-step {
+            min-width: 80px;
+            padding: 10px;
+        }
+        
+        .step-image {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .sequence-preview {
+            gap: 5px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .events-container {
+            gap: 5px;
+        }
+        
+        .event-item {
+            min-width: 90px;
+            max-width: 115px;
+            padding: 10px;
+        }
+        
+        .event-image {
+            width: 55px;
+            height: 55px;
+        }
+        
+        .event-emoji {
+            font-size: 1.2rem;
+        }
+        
+        .event-name {
+            font-size: 0.7rem;
+        }
+        
+        .sequence-slots {
+            gap: 5px;
+        }
+        
+        .sequence-slot {
+            min-width: 95px;
+            min-height: 85px;
+            padding: 10px;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+        }
+
+        .sorting-section h3 {
+            font-size: 1rem;
+        }
+
+        .sequence-title {
+            font-size: 1rem;
+        }
+
+        .event-title {
+            font-size: 1.3rem;
+        }
+        
+        .control-btn.reset {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+        
+        .control-btn.reset.show {
+            display: block !important;
+        }
+        
+        .preview-step {
+            min-width: 85px;
+            padding: 10px;
+        }
+        
+        .step-image {
+            width: 45px;
+            height: 45px;
+        }
+        
+        .step-emoji {
+            font-size: 1.2rem;
+        }
+        
+        .step-name {
+            font-size: 0.7rem;
+        }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">📚⏰ Secuencia de Eventos</h1>
+        <p class="game-instructions">
+            ¡Observa el orden correcto de los eventos y luego ordénalos arrastrando las tarjetas!<br>
+            <small>💡 Tip: Presta atención a la secuencia natural de cada proceso</small>
+        </p>
+    </div>
+
+    <!-- Modal de finalización del juego -->
+    <div id="completion-modal" class="completion-modal">
+        <div class="completion-modal-content">
+            <h3>🏆 ¡FELICITACIONES!</h3>
+            <div class="completion-message">
+                <p>Has completado todos los niveles del juego</p>
+                <div class="final-score">
+                    Puntuación Final: <span id="final-score-value">0</span> puntos
+                </div>
+            </div>
+            <div class="completion-buttons">
+                <button id="play-again-btn" class="completion-btn play-again">
+                    🔄 Jugar de Nuevo
+                </button>
+                <button id="go-home-btn" class="completion-btn go-home">
+                    🏠 Volver al Inicio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de secuencia inicial -->
+    <div id="sequence-modal" class="sequence-modal">
+        <div class="sequence-modal-content">
+            <h3>🎯 Observa la Secuencia Correcta</h3>
+            <div class="sequence-modal-preview" id="sequenceModalPreview">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <button id="ready-btn" class="ready-button">✅ ¡Listo! Empezar a Ordenar</button>
+        </div>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div class="start-screen">
+        <div class="start-content">
+            <h2>🎮 ¡Bienvenido al Juego de Eventos!</h2>
+            <p>Aprende sobre secuencias lógicas y procesos naturales</p>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-button">
+                    🚀 Comenzar Juego
+                </button>
+                <button id="instructions-btn" class="instructions-button">
+                    📖 Instrucciones
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="instructions-modal">
+        <div class="instructions-content">
+            <div class="instructions-header">
+                <h3>📖 ¿Cómo Jugar?</h3>
+                <button id="close-instructions" class="close-btn">✖</button>
+            </div>
+            
+            <div class="instructions-body">
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>👀 Observa la Secuencia</h4>
+                        <p>Primero verás el orden correcto de los eventos del proceso</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>🖱️ Arrastra las Tarjetas</h4>
+                        <p>Arrastra las tarjetas mezcladas a las casillas en el orden correcto</p>
+                    </div>
+                </div>
+
+                <div class="drag-demo">
+                    <div class="demo-event">Paso 1</div>
+                    <div class="demo-arrow">➡️</div>
+                    <div class="demo-slot">Casilla 1</div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>✅ ¡Se Verifica Automáticamente!</h4>
+                        <p>Cuando completes la secuencia, se verificará automáticamente</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions-footer">
+                <button id="start-from-instructions" class="start-button">
+                    🎮 ¡Entendido, Empezar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de Nivel Compacto (se muestra durante el juego) -->
+    <div class="level-indicator">
+        🎯 Nivel <span class="level-value">1</span> / 6
+    </div>
+    
+    <!-- Elementos del juego ocultos inicialmente -->
+    <div class="game-elements" style="display: none;">
+        <!-- Botón de pista pequeño -->
+        <button id="hint-btn" class="hint-button">👁️</button>
+
+        <!-- Título del evento actual -->
+        <div class="event-title" id="eventTitle">Florecimiento</div>
+        
+        <!-- Sección para mostrar la secuencia correcta -->
+        <div class="sequence-display" id="sequenceDisplay" style="display: none;">
+            <h4>📋 Orden Correcto del Proceso</h4>
+            <div class="sequence-preview" id="sequencePreview">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <p style="text-align: center; color: #666; font-style: italic;">
+                ¡Memoriza este orden! Las tarjetas se mezclarán para que las ordenes.
+            </p>
+        </div>
+        
+        <!-- Área de juego con dos columnas en móvil -->
+        <div class="game-area">
+            <!-- Sección de tarjetas para arrastrar -->
+            <div class="sorting-section">
+                <h3>🎯 Arrastra las Tarjetas</h3>
+                <div class="events-container" id="eventsContainer">
+                    <!-- Las tarjetas se generarán dinámicamente -->
+                </div>
+            </div>
+            
+            <!-- Área de secuencia donde soltar -->
+            <div class="sequence-area">
+                <h3 class="sequence-title" id="sequenceTitle">📝 Ordena la Secuencia</h3>
+                <div class="sequence-slots" id="sequenceSlots">
+                    <!-- Los slots se generarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="resetGame" class="control-btn reset">🔄</button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+    </div>
+</div>
+
+<script>
+class EventSequenceGame {
+    constructor() {
+        console.log('Iniciando constructor del juego de secuencia de eventos...');
+        
+        this.events = [
+            {
+                level: 1,
+                title: "🌸 Florecimiento",
+                description: "Observa cómo se desarrolla el proceso de florecimiento de una planta",
+                steps: [
+                    { image: "rosa1.jpeg", name: "Semilla", order: 1 },
+                    { image: "rosa2.jpeg", name: "Brote", order: 2 },
+                    { image: "rosa3.jpeg", name: "Crecimiento", order: 3 },
+                    { image: "rosa4.jpeg", name: "Flor", order: 4 }
+                ]
+            },
+            {
+                level: 2,
+                title: "🌳 Crecimiento de Árbol",
+                description: "Aprende las etapas del crecimiento de un árbol desde semilla hasta adulto",
+                steps: [
+                    { image: "arbol1.jpg", name: "Semilla", order: 1 },
+                    { image: "arbol2.jpg", name: "Árbol pequeño", order: 2 },
+                    { image: "arbol3.jpg", name: "Árbol mediano", order: 3 },
+                    { image: "arbol4.jpg", name: "Árbol Adulto", order: 4 }
+                ]
+            },
+            {
+                level: 3,
+                title: "❄️ Muñeco de nieve",
+                description: "Descubre cómo se crea un muñeco de nieve",
+                steps: [
+                    { image: "nieve1.jpg", name: "Bola grande de nieve", order: 1 },
+                    { image: "nieve2.jpg", name: "Bola grande de nieve y encima bola pequeña", order: 2 },
+                    { image: "nieve3.jpg", name: "Bola grande de nieve y encima bola pequeña con cara", order: 3 },
+                    { image: "nieve4.jpg", name: "Muñeco de nieve terminado", order: 4 }
+                ]
+            },
+            {
+                level: 4,
+                title: "🥪 Hacer un Emparedado",
+                description: "Aprende los pasos para preparar un delicioso emparedado",
+                steps: [
+                    { image: "pan1.jpg", name: "Pan", order: 1 },
+                    { image: "pan2.jpg", name: "Pan y mermelada", order: 2 },
+                    { image: "pan3.jpg", name: "Pan con mermelada", order: 3 },
+                    { image: "pan4.jpg", name: "Pan comido", order: 4 }
+                ]
+            },
+            {
+                level: 5,
+                title: "🐣 Nacimiento de Pollito",
+                description: "Observa el increíble proceso de nacimiento de un pollito",
+                steps: [
+                    { image: "gallina1.jpeg", name: "Huevos", order: 1 },
+                    { image: "gallina2.jpeg", name: "Gallina incubando", order: 2 },
+                    { image: "gallina3.jpeg", name: "Gallina termina incubación", order: 3 },
+                    { image: "gallina4.jpeg", name: "Nacen pollitos", order: 4 }
+                ]
+            },
+            {
+                level: 6,
+                title: "🎈 Globo que Revienta",
+                description: "Observa la secuencia de un globo desde que se infla hasta que revienta",
+                steps: [
+                    { image: "globo1.jpeg", name: "Globo Vacío", order: 1 },
+                    { image: "globo2.jpeg", name: "Inflando", order: 2 },
+                    { image: "globo3.jpeg", name: "Globo Lleno", order: 3 },
+                    { image: "globo4.jpeg", name: "Revienta", order: 4 }
+                ]
+            }
+        ];
+        
+        this.currentLevel = 1;
+        this.currentEvent = null;
+        this.userSequence = [];
+        this.score = 0;
+        this.gameStarted = false;
+        this.sequenceShown = false;
+        this.gameState = 'waiting';
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        this.audioContext = null;
+        this.gameAudio = {};
+        this.instructionsAudio = null;
+        this.selectedStep = null; // Para el modo híbrido
+        
+        console.log('Propiedades inicializadas, llamando a init()...');
+        this.init();
+        console.log('Constructor terminado');
+    }
+    
+    init() {
+        console.log('Ejecutando init()...');
+        
+        try {
+            console.log('1. Inicializando AudioContext...');
+            this.initAudioContext();
+            
+            console.log('2. Configurando audio del juego...');
+            this.setupGameAudio();
+            
+            console.log('3. Configurando event listeners...');
+            this.setupEventListeners();
+            
+            console.log('4. Configurando instrucciones...');
+            this.setupInstructions();
+            
+            console.log('5. Configurando pantalla de inicio...');
+            this.setupStartScreen();
+            
+            console.log('6. Ocultando elementos del juego...');
+            this.hideGameElements();
+            
+            console.log('Init() completado exitosamente');
+        } catch (error) {
+            console.error('Error en init():', error);
+        }
+    }
+
+    hideGameElements() {
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const resetButton = document.getElementById('resetGame');
+        
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        if (resetButton) resetButton.classList.remove('show');
+    }
+
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Audio Context no disponible:', e);
+            this.audioContext = null;
+        }
+    }
+
+    setupGameAudio() {
+        // Sonidos del juego
+        const gameAudioFiles = {
+            correct: 'correcto',
+            incorrect: 'incorrecto',
+            start: 'inicio_eventos',
+            complete: 'completado_eventos',
+            instructions: 'instrucciones_eventos'
+        };
+
+        Object.keys(gameAudioFiles).forEach(key => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.8;
+            
+            const audioFile = gameAudioFiles[key];
+            const formats = ['mp3', 'wav', 'ogg'];
+            
+            for (const format of formats) {
+                try {
+                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    this.gameAudio[key] = audio;
+                    break;
+                } catch (e) {
+                    console.log(`No se pudo cargar ${audioFile}.${format}`);
+                }
+            }
+            
+            if (!this.gameAudio[key]) {
+                console.log(`Usando sonido sintético para ${key}`);
+                this.gameAudio[key] = null;
+            }
+        });
+    }
+
+    playGameSound(soundType) {
+        const audio = this.gameAudio[soundType];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(console.log);
+        } else {
+            this.createSyntheticGameSound(soundType);
+        }
+    }
+
+    createSyntheticGameSound(soundType) {
+        if (!this.audioContext) return;
+
+        const frequencies = {
+            correct: [523, 659, 784, 1047],
+            incorrect: [200, 150, 100],
+            start: [261.63, 329.63, 392.00, 523.25],
+            complete: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99],
+            instructions: [440, 493, 523]
+        };
+
+        const freq = frequencies[soundType] || [440];
+        
+        freq.forEach((f, i) => {
+            setTimeout(() => {
+                this.createSyntheticSound(f, 0.3);
+            }, i * 150);
+        });
+    }
+
+    createSyntheticSound(frequency = 440, duration = 0.3) {
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    stopAllAudio() {
+        // Parar todos los audios del juego
+        Object.keys(this.gameAudio).forEach(key => {
+            const audio = this.gameAudio[key];
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        
+        // Parar speech synthesis
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+        }
+    }
+
+    setupInstructions() {
+        console.log('Configurando instrucciones...');
+        
+        const instructionsBtn = document.getElementById('instructions-btn');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const closeInstructions = document.getElementById('close-instructions');
+
+        if (instructionsBtn) {
+            instructionsBtn.addEventListener('click', () => {
+                this.showInstructions();
+            });
+        }
+
+        if (closeInstructions) {
+            closeInstructions.addEventListener('click', () => {
+                this.stopAllAudio();
+                this.hideInstructions();
+            });
+        }
+
+        if (instructionsModal) {
+            instructionsModal.addEventListener('click', (e) => {
+                if (e.target === instructionsModal) {
+                    this.stopAllAudio();
+                    this.hideInstructions();
+                }
+            });
+        }
+    }
+
+    setupStartScreen() {
+        const startButton = document.getElementById('start-game-btn');
+        const startFromInstructions = document.getElementById('start-from-instructions');
+        
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
+        
+        if (startFromInstructions) {
+            startFromInstructions.addEventListener('click', () => {
+                this.stopAllAudio();
+                this.hideInstructions();
+                setTimeout(() => this.startGame(), 300);
+            });
+        }
+    }
+
+    showInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+                this.startDragAnimation();
+            }, 10);
+
+            this.playGameSound('instructions');
+        }
+    }
+
+    hideInstructions() {
+        this.stopAllAudio();
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    startDragAnimation() {
+        const demoEvent = document.querySelector('.demo-event');
+        const demoSlot = document.querySelector('.demo-slot');
+
+        if (!demoEvent || !demoSlot) return;
+
+        const animate = () => {
+            // Resetear estado inicial
+            demoEvent.style.transform = 'translate(0, 0)';
+            demoEvent.style.opacity = '1';
+            demoEvent.style.zIndex = '1';
+            demoSlot.classList.remove('filled');
+            demoSlot.innerHTML = 'Casilla 1';
+            demoSlot.style.borderColor = '#ccc';
+            demoSlot.style.backgroundColor = 'transparent';
+
+            setTimeout(() => {
+                // Mover elemento manteniendo visibilidad
+                demoEvent.style.transform = 'translate(120px, 0)';
+                demoEvent.style.zIndex = '1000';
+                demoEvent.style.opacity = '0.8';
+                
+                // Agregar efecto de hover al slot
+                demoSlot.style.borderColor = '#9B59B6';
+                demoSlot.style.backgroundColor = 'rgba(155, 89, 182, 0.1)';
+            }, 1000);
+
+            setTimeout(() => {
+                // Colocar en slot manteniendo estilo
+                demoSlot.classList.add('filled');
+                demoSlot.innerHTML = `
+                    <div style="background: linear-gradient(45deg, #9B59B6, #3498DB); color: white; padding: 5px 10px; border-radius: 8px; font-weight: bold; font-size: 0.8rem;">
+                        Paso 1
+                    </div>
+                `;
+                demoSlot.style.borderColor = '#9B59B6';
+                demoSlot.style.backgroundColor = 'rgba(155, 89, 182, 0.1)';
+                demoEvent.style.opacity = '0';
+            }, 2500);
+
+            setTimeout(() => {
+                animate();
+            }, 4000);
+        };
+
+        animate();
+    }
+
+    startGame() {
+        this.gameStarted = true;
+        this.gameState = 'playing';
+        this.score = 0;
+        this.currentLevel = 1;
+        
+        // Agregar clase al body para ocultar footer
+        document.body.classList.add('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        if (startScreen) {
+            startScreen.style.display = 'none';
+        }
+
+        const gameElements = document.querySelector('.game-elements');
+        if (gameElements) {
+            gameElements.style.display = 'block';
+        }
+
+        const levelIndicator = document.querySelector('.level-indicator');
+        if (levelIndicator) {
+            levelIndicator.style.display = 'block';
+        }
+
+        // Mostrar botón de reiniciar
+        const resetButton = document.getElementById('resetGame');
+        if (resetButton) {
+            resetButton.classList.add('show');
+        }
+
+        this.playGameSound('start');
+        this.loadLevel(this.currentLevel);
+        this.updateUI();
+    }
+
+    loadLevel(level) {
+        this.currentEvent = this.events.find(event => event.level === level);
+        this.sequenceShown = false;
+        this.selectedStep = null; // Resetear selección al cambiar de nivel
+        
+        if (!this.currentEvent) {
+            this.completeGame();
+            return;
+        }
+
+        // Actualizar UI del nivel
+        const eventTitle = document.getElementById('eventTitle');
+        const levelValue = document.querySelector('.level-value');
+
+        if (eventTitle) eventTitle.textContent = this.currentEvent.title;
+        if (levelValue) levelValue.textContent = this.currentLevel;
+
+        // Resetear estado
+        const sequenceDisplay = document.getElementById('sequenceDisplay');
+        if (sequenceDisplay) {
+            sequenceDisplay.style.display = 'none';
+        }
+
+        this.createEventCards();
+        this.createSequenceSlots();
+        
+        // Mostrar modal automáticamente
+        setTimeout(() => {
+            this.showSequenceModal();
+        }, 500);
+    }
+
+    createEventCards() {
+        const container = document.getElementById('eventsContainer');
+        container.innerHTML = '';
+        
+        // Mezclar los pasos
+        const shuffledSteps = [...this.currentEvent.steps].sort(() => Math.random() - 0.5);
+        
+        shuffledSteps.forEach((step, index) => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-item';
+            eventDiv.draggable = true;
+            eventDiv.dataset.stepOrder = step.order;
+            eventDiv.innerHTML = `
+                <div class="event-image">
+                    <img src="/static/images/secuencias_eventos/${step.image}" alt="${step.name}" />
+                </div>
+            `;
+            
+            eventDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Si ya hay un paso seleccionado, deseleccionarlo
+                if (this.selectedStep !== null) {
+                    const prevSelected = document.querySelector('.event-item.selected');
+                    if (prevSelected) {
+                        prevSelected.classList.remove('selected');
+                    }
+                }
+                
+                // Si es el mismo paso, deseleccionar
+                if (this.selectedStep === step.order) {
+                    this.selectedStep = null;
+                    eventDiv.classList.remove('selected');
+                } else {
+                    // Seleccionar nuevo paso
+                    this.selectedStep = step.order;
+                    eventDiv.classList.add('selected');
+                }
+            });
+            
+            eventDiv.addEventListener('dragstart', (e) => this.handleDragStart(e));
+            eventDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
+            
+            // Touch events para dispositivos móviles
+            eventDiv.addEventListener('touchstart', (e) => this.handleTouchStart(e));
+            eventDiv.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+            eventDiv.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            
+            container.appendChild(eventDiv);
+        });
+    }
+    
+    createSequenceSlots() {
+        const container = document.getElementById('sequenceSlots');
+        container.innerHTML = '';
+        
+        this.userSequence = new Array(this.currentEvent.steps.length).fill(null);
+        
+        for (let i = 0; i < this.currentEvent.steps.length; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'sequence-slot';
+            slot.dataset.slotIndex = i;
+            slot.innerHTML = `
+                <div class="slot-number">${i + 1}</div>
+                <div class="drop-area"></div>
+            `;
+            
+            // Agregar event listeners al slot completo
+            slot.addEventListener('dragover', (e) => this.handleDragOver(e));
+            slot.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+            slot.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            slot.addEventListener('drop', (e) => this.handleDrop(e));
+            
+            // Modo híbrido: permitir click en slots para colocar paso seleccionado
+            slot.addEventListener('click', (e) => {
+                this.placeStepInSlot(i);
+            });
+            
+            container.appendChild(slot);
+        }
+    }
+    
+    setupEventListeners() {
+        const hintBtn = document.getElementById('hint-btn');
+        if (hintBtn) {
+            hintBtn.addEventListener('click', () => {
+                this.showSequenceHint();
+            });
+        }
+
+        const readyBtn = document.getElementById('ready-btn');
+        if (readyBtn) {
+            readyBtn.addEventListener('click', () => {
+                this.hideSequenceModal();
+            });
+        }
+
+        const playAgainBtn = document.getElementById('play-again-btn');
+        if (playAgainBtn) {
+            playAgainBtn.addEventListener('click', () => {
+                this.playAgain();
+            });
+        }
+
+        const goHomeBtn = document.getElementById('go-home-btn');
+        if (goHomeBtn) {
+            goHomeBtn.addEventListener('click', () => {
+                this.goToHome();
+            });
+        }
+        
+        const resetButton = document.getElementById('resetGame');
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                this.resetGame();
+            });
+        }
+    }
+
+    showSequenceModal() {
+        if (!this.currentEvent) return;
+
+        const modal = document.getElementById('sequence-modal');
+        const preview = document.getElementById('sequenceModalPreview');
+
+        if (modal && preview) {
+            preview.innerHTML = '';
+            
+            this.currentEvent.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'preview-step';
+                stepDiv.innerHTML = `
+                    <div class="step-number-preview">${step.order}</div>
+                    <div class="step-image">
+                        <img src="/static/images/secuencias_eventos/${step.image}" alt="${step.name}" />
+                    </div>
+                `;
+                preview.appendChild(stepDiv);
+            });
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+    }
+
+    hideSequenceModal() {
+        const modal = document.getElementById('sequence-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+                this.showFeedback(`🎯 Nivel ${this.currentLevel}: ${this.currentEvent.title}`, 'success');
+            }, 300);
+        }
+    }
+
+    showSequenceHint() {
+        const sequenceDisplay = document.getElementById('sequenceDisplay');
+        const sequencePreview = document.getElementById('sequencePreview');
+
+        if (sequenceDisplay && sequencePreview) {
+            sequencePreview.innerHTML = '';
+            
+            this.currentEvent.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'preview-step';
+                stepDiv.innerHTML = `
+                    <div class="step-number-preview">${step.order}</div>
+                    <div class="step-image">
+                        <img src="/static/images/secuencias_eventos/${step.image}" alt="${step.name}" />
+                    </div>
+                `;
+                sequencePreview.appendChild(stepDiv);
+            });
+
+            sequenceDisplay.style.display = 'block';
+            
+            setTimeout(() => {
+                sequenceDisplay.style.display = 'none';
+            }, 4000);
+        }
+    }
+
+    showSequence() {
+        if (!this.currentEvent || this.sequenceShown) return;
+
+        this.sequenceShown = true;
+        const sequenceDisplay = document.getElementById('sequenceDisplay');
+        const sequencePreview = document.getElementById('sequencePreview');
+
+        if (sequenceDisplay && sequencePreview) {
+            sequencePreview.innerHTML = '';
+            
+            this.currentEvent.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'preview-step';
+                stepDiv.innerHTML = `
+                    <div class="step-number-preview">${step.order}</div>
+                    <div class="step-image">
+                        <img src="/static/images/secuencias_eventos/${step.image}" alt="${step.name}" />
+                    </div>
+                `;
+                sequencePreview.appendChild(stepDiv);
+            });
+
+            sequenceDisplay.style.display = 'block';
+            
+            // Cambiar el botón
+            const showBtn = document.getElementById('showSequence');
+            if (showBtn) {
+                showBtn.textContent = '✅ Secuencia Vista';
+                showBtn.disabled = true;
+                showBtn.style.opacity = '0.6';
+            }
+
+            setTimeout(() => {
+                this.showFeedback('¡Perfecto! Ahora arrastra las tarjetas en el orden correcto.', 'success');
+            }, 1000);
+        }
+    }
+    
+    handleTouchStart(e) {
+        const touch = e.touches[0];
+        const element = e.target.closest('.event-item');
+        if (element) {
+            element.classList.add('dragging');
+            this.touchStartElement = element;
+            this.touchOffset = {
+                x: touch.clientX - element.getBoundingClientRect().left,
+                y: touch.clientY - element.getBoundingClientRect().top
+            };
+            
+            // Prevenir scroll y otros eventos
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+
+    handleTouchMove(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.touches[0];
+        this.touchStartElement.style.position = 'fixed';
+        this.touchStartElement.style.zIndex = '1000';
+        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
+        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
+        this.touchStartElement.style.pointerEvents = 'none';
+        
+        // Encontrar el slot debajo del dedo
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
+        
+        // Remover highlight de todos los slots
+        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Agregar highlight al slot actual
+        if (slot) {
+            slot.classList.add('drag-over');
+        }
+        
+        // Prevenir scroll y otros eventos
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    handleTouchEnd(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
+        
+        // Restaurar elemento
+        this.touchStartElement.style.position = '';
+        this.touchStartElement.style.zIndex = '';
+        this.touchStartElement.style.left = '';
+        this.touchStartElement.style.top = '';
+        this.touchStartElement.style.pointerEvents = '';
+        this.touchStartElement.classList.remove('dragging');
+        
+        // Remover highlight de todos los slots
+        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Procesar drop si hay slot válido
+        if (slot) {
+            const stepOrder = parseInt(this.touchStartElement.dataset.stepOrder);
+            const slotIndex = parseInt(slot.dataset.slotIndex);
+            this.dropEventInSlot(stepOrder, slotIndex, slot);
+        }
+        
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        
+        // Prevenir eventos adicionales
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.stepOrder);
+        e.target.classList.add('dragging');
+    }
+    
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+    
+    handleDragOver(e) {
+        e.preventDefault();
+    }
+    
+    handleDragEnter(e) {
+        const slot = e.target.closest('.sequence-slot');
+        if (slot) {
+            slot.classList.add('drag-over');
+        }
+    }
+    
+    handleDragLeave(e) {
+        const slot = e.target.closest('.sequence-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
+    }
+    
+    handleDrop(e) {
+        e.preventDefault();
+        
+        const slot = e.target.closest('.sequence-slot');
+        if (!slot) return;
+        
+        const stepOrder = parseInt(e.dataTransfer.getData('text/plain'));
+        const slotIndex = parseInt(slot.dataset.slotIndex);
+        
+        slot.classList.remove('drag-over');
+        this.dropEventInSlot(stepOrder, slotIndex, slot);
+    }
+    
+    dropEventInSlot(stepOrder, slotIndex, slot) {
+        const step = this.currentEvent.steps.find(s => s.order === stepOrder);
+        
+        if (step) {
+            slot.classList.add('filled');
+            const dropArea = slot.querySelector('.drop-area');
+            if (dropArea) {
+                dropArea.innerHTML = `
+                    <div class="event-image">
+                        <img src="/static/images/secuencias_eventos/${step.image}" alt="${step.name}" />
+                    </div>
+                `;
+            }
+            
+            this.userSequence[slotIndex] = stepOrder;
+            
+            // Verificar si la secuencia está completa y automáticamente comprobar
+            if (this.userSequence.every(slot => slot !== null)) {
+                setTimeout(() => {
+                    this.checkSequence();
+                }, 500);
+            }
+        }
+    }
+    
+    // Método para modo híbrido: colocar paso seleccionado en slot
+    placeStepInSlot(slotIndex) {
+        if (this.selectedStep === null) {
+            this.showFeedback('🎮 Primero selecciona un evento haciendo clic en él', 'success');
+            return;
+        }
+
+        const slot = document.querySelector(`[data-slot-index="${slotIndex}"]`);
+        if (!slot) return;
+
+        this.dropEventInSlot(this.selectedStep, slotIndex, slot);
+        
+        // Deseleccionar el paso después de colocarlo
+        const selectedStepDiv = document.querySelector('.event-item.selected');
+        if (selectedStepDiv) {
+            selectedStepDiv.classList.remove('selected');
+        }
+        this.selectedStep = null;
+    }
+    
+    checkSequence() {
+        if (this.userSequence.some(slot => slot === null)) {
+            this.showFeedback('❌ Completa toda la secuencia antes de comprobar.', 'error');
+            return;
+        }
+        
+        const isCorrect = this.userSequence.every((stepOrder, index) => 
+            stepOrder === (index + 1)
+        );
+        
+        if (isCorrect) {
+            this.score += this.currentLevel * 10;
+            this.playGameSound('correct');
+            this.showFeedback(`🎉 ¡Excelente! ¡Ganaste ${this.currentLevel * 10} puntos!`, 'success');
+            
+            this.celebrateSuccess();
+            
+            setTimeout(() => {
+                this.nextLevel();
+            }, 2000);
+        } else {
+            this.playGameSound('incorrect');
+            this.showFeedback('❌ ¡Inténtalo de nuevo! El orden no es correcto.', 'error');
+            this.shakeSequence();
+            
+            // Limpiar la secuencia después de un error
+            setTimeout(() => {
+                this.clearSequence();
+            }, 1500);
+        }
+    }
+
+    nextLevel() {
+        this.currentLevel++;
+        if (this.currentLevel > 6) {
+            this.completeGame();
+        } else {
+            this.loadLevel(this.currentLevel);
+        }
+    }
+
+    celebrateSuccess() {
+        const sequenceTitle = document.getElementById('sequenceTitle');
+        if (sequenceTitle) {
+            sequenceTitle.classList.add('correct');
+        }
+        
+        const sequenceArea = document.querySelector('.sequence-area');
+        if (sequenceArea) {
+            sequenceArea.classList.add('celebrate');
+        }
+        
+        setTimeout(() => {
+            if (sequenceTitle) sequenceTitle.classList.remove('correct');
+            if (sequenceArea) sequenceArea.classList.remove('celebrate');
+        }, 2000);
+    }
+
+    shakeSequence() {
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach(slot => {
+            slot.classList.add('incorrect');
+        });
+        
+        setTimeout(() => {
+            sequenceSlots.forEach(slot => {
+                slot.classList.remove('incorrect');
+            });
+        }, 500);
+    }
+
+    clearSequence() {
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach((slot, index) => {
+            slot.classList.remove('filled');
+            const dropArea = slot.querySelector('.drop-area');
+            if (dropArea) {
+                dropArea.innerHTML = '';
+            }
+        });
+        
+        this.userSequence = new Array(this.currentEvent.steps.length).fill(null);
+        this.showFeedback('🔄 Secuencia limpiada. ¡Inténtalo de nuevo!', 'success');
+    }
+
+    completeGame() {
+        this.gameState = 'complete';
+        this.playGameSound('complete');
+        
+        // Mostrar modal de finalización
+        setTimeout(() => {
+            this.showCompletionModal();
+        }, 1000);
+    }
+
+    showCompletionModal() {
+        const modal = document.getElementById('completion-modal');
+        const finalScoreValue = document.getElementById('final-score-value');
+        
+        if (modal && finalScoreValue) {
+            finalScoreValue.textContent = this.score;
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+            }, 10);
+        }
+    }
+
+    hideCompletionModal() {
+        const modal = document.getElementById('completion-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    playAgain() {
+        this.hideCompletionModal();
+        this.score = 0;
+        this.currentLevel = 1;
+        this.sequenceShown = false;
+        this.selectedStep = null; // Resetear selección
+        this.gameState = 'playing';
+        this.updateUI();
+        
+        setTimeout(() => {
+            this.loadLevel(this.currentLevel);
+            this.showFeedback('🔄 ¡Nuevo juego iniciado! ¡Empecemos de nuevo!', 'success');
+        }, 400);
+    }
+
+    goToHome() {
+        this.hideCompletionModal();
+        
+        // Restaurar estado inicial
+        document.body.classList.remove('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        
+        if (startScreen) startScreen.style.display = 'block';
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        
+        // Resetear valores
+        this.gameStarted = false;
+        this.gameState = 'waiting';
+        this.score = 0;
+        this.currentLevel = 1;
+        this.sequenceShown = false;
+        this.selectedStep = null; // Resetear selección
+    }
+    
+    resetGame() {
+        this.score = 0;
+        this.currentLevel = 1;
+        this.sequenceShown = false;
+        this.selectedStep = null; // Resetear selección
+        this.gameState = 'playing';
+        this.updateUI();
+        this.loadLevel(this.currentLevel);
+        this.showFeedback('🔄 ¡Juego reiniciado! ¡Empecemos de nuevo!', 'success');
+    }
+    
+    updateUI() {
+        const levelElement = document.querySelector('.level-value');
+        if (levelElement) {
+            levelElement.textContent = this.currentLevel;
+        }
+    }
+    
+    showFeedback(message, type) {
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.classList.add('show');
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+    }
+}
+
+// Inicializar el juego cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    new EventSequenceGame();
+});
+</script>
+{% endblock %}

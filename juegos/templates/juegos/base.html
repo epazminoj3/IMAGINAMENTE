@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}🌈 Mi Mundo Divertido - Juegos Educativos 🌈{% endblock %}</title>
+    
+    <!-- Favicon usando SVG inline -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    {% load static %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(45deg, 
+                #FFE066 0%, 
+                #FF6B9D 25%, 
+                #6BCF7F 50%, 
+                #4ECDC4 75%, 
+                #45B7D1 100%);
+            background-size: 400% 400%;
+            animation: gradientMove 8s ease infinite;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Nubes flotantes de fondo */
+        .cloud {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+            opacity: 0.6;
+            animation: float 15s infinite linear;
+            z-index: 1;
+        }
+        
+        .cloud:before {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50px;
+        }
+        
+        .cloud1 {
+            width: 80px;
+            height: 30px;
+            top: 20%;
+            animation-duration: 20s;
+        }
+        
+        .cloud1:before {
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }
+        
+        .cloud2 {
+            width: 60px;
+            height: 25px;
+            top: 60%;
+            animation-duration: 25s;
+            animation-delay: -5s;
+        }
+        
+        .cloud2:before {
+            width: 40px;
+            height: 40px;
+            top: -20px;
+            left: 15px;
+        }
+        
+        .cloud3 {
+            width: 70px;
+            height: 28px;
+            top: 80%;
+            animation-duration: 18s;
+            animation-delay: -10s;
+        }
+        
+        .cloud3:before {
+            width: 45px;
+            height: 45px;
+            top: -22px;
+            left: 12px;
+        }
+        
+        @keyframes float {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(calc(100vw + 100px)); }
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.2rem 0;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+            border-bottom: 5px solid #FF6B9D;
+        }
+        
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            position: relative;
+            min-height: 80px;
+        }
+        
+        .nav-left {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+        
+        .nav-right {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: flex-end;
+        }
+        
+        .logo {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+        
+        .logo a {
+            display: block;
+            text-decoration: none;
+        }
+        
+        .logo-img {
+            height: clamp(80px, 12vw, 120px);
+            width: auto;
+            object-fit: contain;
+            animation: bounce 2s infinite;
+            background: transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .logo-img:hover {
+            transform: scale(1.05);
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a {
+            background: linear-gradient(45deg, #FF6B9D, #FFE066);
+            color: white;
+            text-decoration: none;
+            padding: clamp(0.6rem, 2vw, 0.8rem) clamp(1rem, 3vw, 1.5rem);
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            border: 3px solid white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        
+        .nav-links a:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #6BCF7F, #4ECDC4);
+        }
+        
+        /* Ocultar enlace de aprender temporalmente */
+        .nav-links a[href="#aprende"] {
+            display: none;
+        }
+        
+        /* Ocultar botón de juegos en páginas específicas de juegos */
+        .hide-games-btn .nav-links a[href="#games-section"] {
+            display: none;
+        }
+        
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+            position: relative;
+            z-index: 5;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .welcome-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            border: 5px solid #FFE066;
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .welcome-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            background: linear-gradient(45deg, #FF6B9D, #4ECDC4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            animation: wiggle 2s ease-in-out infinite;
+        }
+        
+        .welcome-description {
+            font-size: clamp(1.1rem, 3vw, 1.5rem);
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .play-button {
+            background: linear-gradient(45deg, #6BCF7F, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 4px solid white;
+            text-decoration: none;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1) rotate(-3deg);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.4);
+            background: linear-gradient(45deg, #FF6B9D, #FFE066);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 2rem;
+        }
+        
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            transition: all 0.4s ease;
+            border: 4px solid transparent;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .game-card:hover,
+        .game-card:focus {
+            text-decoration: none;
+            color: inherit;
+        }
+        
+        .game-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+        
+        .game-card:hover:before {
+            left: 100%;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+            border-color: #FF6B9D;
+        }
+        
+        .game-image {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1rem;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            animation: float-icon 3s ease-in-out infinite;
+        }
+        
+        .game-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+        
+        .game-image .placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #FF6B9D, #4ECDC4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            border-radius: 20px;
+        }
+        
+        .game-icon {
+            font-size: clamp(4rem, 8vw, 6rem);
+            margin-bottom: 1rem;
+            display: block;
+            animation: float-icon 3s ease-in-out infinite;
+        }
+        
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .game-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            color: #FF6B9D;
+            margin-bottom: 1rem;
+        }
+        
+        .game-description {
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        
+        .game-btn {
+            background: linear-gradient(45deg, #6BCF7F, #4ECDC4);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: clamp(1rem, 2.5vw, 1.2rem);
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 3px solid white;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .game-btn:hover {
+            transform: scale(1.05) rotate(-2deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #FF6B9D, #FFE066);
+        }
+        
+        .coming-soon {
+            opacity: 0.7;
+            pointer-events: none;
+            position: relative;
+        }
+        
+        .coming-soon:after {
+            content: '¡Próximamente!';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            background: #FF6B9D;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 2;
+        }
+        
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            text-align: center;
+            padding: 2rem 1rem;
+            margin-top: 4rem;
+            border-top: 5px solid #4ECDC4;
+            font-weight: 600;
+            font-size: clamp(0.9rem, 2vw, 1rem);
+        }
+        
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .footer-title {
+            font-weight: 800;
+            font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+            margin-bottom: 1rem;
+            color: #FF6B9D;
+        }
+        
+        .team-members {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .team-member {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 3px solid #FF6B9D;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .team-member:hover {
+            transform: translateY(-5px) rotate(1deg);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-color: #4ECDC4;
+        }
+        
+        .team-member .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            animation: float-icon 2s ease-in-out infinite;
+        }
+        
+        .team-member .name {
+            color: #333;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        
+        .university-info {
+            background: rgba(76, 205, 196, 0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid #4ECDC4;
+        }
+        
+        /* Elementos decorativos */
+        .star {
+            position: fixed;
+            color: #FFE066;
+            font-size: clamp(1.5rem, 3vw, 2rem);
+            animation: twinkle 3s infinite;
+            z-index: 2;
+        }
+        
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        @keyframes wiggle {
+            0%, 7% { transform: rotateZ(0); }
+            15% { transform: rotateZ(-5deg); }
+            20% { transform: rotateZ(3deg); }
+            25% { transform: rotateZ(-3deg); }
+            30% { transform: rotateZ(2deg); }
+            35% { transform: rotateZ(-1deg); }
+            40%, 100% { transform: rotateZ(0); }
+        }
+        
+        .star1 { top: 15%; left: 10%; animation-delay: 0s; }
+        .star2 { top: 25%; right: 15%; animation-delay: 1s; }
+        .star3 { top: 70%; left: 20%; animation-delay: 2s; }
+        .star4 { bottom: 30%; right: 10%; animation-delay: 0.5s; }
+        .star5 { top: 50%; left: 5%; animation-delay: 2.5s; }
+        .star6 { top: 40%; right: 8%; animation-delay: 1.5s; }
+        
+        @media (max-width: 768px) {
+            header {
+                padding: 0.8rem 0;
+            }
+            
+            nav {
+                flex-direction: row;
+                gap: 0.5rem;
+                position: relative;
+                min-height: auto;
+                padding: 0.5rem 1rem;
+                align-items: center;
+            }
+            
+            .logo {
+                position: relative;
+                left: auto;
+                transform: none;
+                order: 2;
+                margin: 0;
+                flex: 0 0 auto;
+            }
+            
+            .logo-img {
+                height: clamp(45px, 7vw, 65px);
+            }
+            
+            .nav-left {
+                order: 1;
+                flex: 1;
+                display: flex;
+                justify-content: flex-start;
+            }
+            
+            .nav-right {
+                order: 3;
+                flex: 1;
+                display: flex;
+                justify-content: flex-end;
+            }
+            
+            .nav-links {
+                gap: 0.4rem;
+                width: auto;
+            }
+            
+            .nav-links a {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            
+            .welcome-section {
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .game-card {
+                padding: 1.5rem;
+            }
+            
+            main {
+                padding: 1rem 0.5rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header {
+                padding: 0.6rem 0;
+            }
+            
+            nav {
+                padding: 0.4rem 0.8rem;
+                gap: 0.3rem;
+            }
+            
+            .logo-img {
+                height: clamp(35px, 6vw, 50px);
+            }
+            
+            .nav-links {
+                gap: 0.2rem;
+            }
+            
+            .nav-links a {
+                padding: 0.4rem 0.6rem;
+                font-size: 0.75rem;
+                letter-spacing: 0.5px;
+            }
+            
+            .welcome-section {
+                padding: 1rem;
+            }
+            
+            .game-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Elementos decorativos de fondo -->
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="cloud cloud3"></div>
+    <div class="star star1">⭐</div>
+    <div class="star star2">✨</div>
+    <div class="star star3">🌟</div>
+    <div class="star star4">⭐</div>
+    <div class="star star5">✨</div>
+    <div class="star star6">🌟</div>
+    
+    <header>
+        <nav>
+            <div class="nav-left">
+                <ul class="nav-links">
+                    <li><a href="{% url 'juegos:home' %}">🏠 CASA</a></li>
+                </ul>
+            </div>
+            <div class="logo">
+                <a href="{% url 'juegos:home' %}">
+                    <img src="{% static 'images/imaginamente_logo.png' %}" alt="Imaginamente Logo" class="logo-img">
+                </a>
+            </div>
+            <div class="nav-right">
+                <ul class="nav-links">
+                    <li><a href="#games-section" onclick="scrollToGames()">🕹️ JUEGOS</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+    
+<footer>
+        <div class="footer-content">
+            <div class="footer-title">🎓 Proyecto Educativo Universitario 🎓</div>
+            
+            <div class="university-info">
+                <strong>🏛️ Universidad Técnica de Babahoyo</strong><br>
+                <span>Centro de Nivelación y Admisión Universitaria</span><br>
+                <span>Carrera de Educación Inicial • Año 2025</span>
+            </div>
+            
+            <p style="margin: 1rem 0; font-weight: 600;">💝 Desarrollado con amor por nuestro equipo de estudiantes:</p>
+            
+            <div class="team-members">
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Nayelly Barroso Armijo</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Gladys Lasso Yauqui</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Mayensy Loor Velásquez</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Stephanny Muñoz Garcés</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Gabriela Olvera Gaibor</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Maholy Perez Alegria</div>
+                </div>
+                <div class="team-member">
+                    <span class="icon">👩‍🎓</span>
+                    <div class="name">Saudy Veliz Armache</div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 2rem; font-size: 1.1rem; font-weight: 700;">
+                🌟 ¡Siempre aprendiendo y jugando! 🌟
+            </p>
+        </div>
+    </footer>
+    
+    <script>
+        // Función para hacer scroll suave a los juegos
+        function scrollToGames() {
+            const gamesSection = document.getElementById('games-section');
+            if (gamesSection) {
+                gamesSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        }
+        
+        // Efectos interactivos simples
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ocultar botón JUEGOS en páginas específicas de juegos
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('/secuencia_animales/') || 
+                currentPath.includes('/secuencia_colores/') || 
+                currentPath.includes('animales') || 
+                currentPath.includes('colores')) {
+                document.body.classList.add('hide-games-btn');
+            }
+            
+            // Hacer que los elementos sean más interactivos al hover
+            const interactiveElements = document.querySelectorAll('a, button');
+            
+            interactiveElements.forEach(element => {
+                element.addEventListener('mouseenter', function() {
+                    this.style.transform = 'scale(1.1) rotate(-2deg)';
+                });
+                
+                element.addEventListener('mouseleave', function() {
+                    this.style.transform = 'scale(1) rotate(0deg)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

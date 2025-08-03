@@ -1,0 +1,2110 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}🎵🐾 Secuencia de Animales - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 5px solid #FFE066;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2rem, 5vw, 3rem);
+        background: linear-gradient(45deg, #FF6B9D, #4ECDC4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        /* animation: wiggle 2s ease-in-out infinite; */
+    }
+    
+    .game-instructions {
+        font-size: 1.2rem;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    /* Pantalla de Inicio */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(78, 205, 196, 0.1), rgba(255, 230, 102, 0.1));
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        border: 3px solid #4ECDC4;
+    }
+    
+    .start-content h2 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        color: #4ECDC4;
+        margin-bottom: 1rem;
+    }
+    
+    .start-content p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+    
+    .start-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .start-button, .instructions-button {
+        background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        color: white;
+        border: none;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+        font-family: 'Fredoka One', cursive;
+    }
+    
+    .instructions-button {
+        background: linear-gradient(45deg, #FF6B9D, #FF8E53);
+        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+    }
+    
+    .start-button:hover, .instructions-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    /* Modal de Instrucciones */
+    .instructions-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .instructions-modal.show {
+        opacity: 1;
+    }
+    
+    .instructions-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        transform: scale(0.7);
+        transition: transform 0.3s ease;
+    }
+    
+    .instructions-modal.show .instructions-content {
+        transform: scale(1);
+    }
+    
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+    
+    .instructions-header h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.8rem;
+        color: #4ECDC4;
+        margin: 0;
+    }
+    
+    .close-btn {
+        background: #ff4757;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        background: #4ECDC4;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .step-text h4 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+    
+    .step-text p {
+        margin: 0;
+        color: #666;
+    }
+    
+    .drag-demo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+    
+    .demo-animal {
+        font-size: 2rem;
+        transition: transform 0.5s ease;
+        cursor: pointer;
+    }
+    
+    .demo-arrow {
+        font-size: 1.5rem;
+        color: #4ECDC4;
+    }
+    
+    .demo-slot {
+        width: 60px;
+        height: 60px;
+        border: 2px dashed #ccc;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-slot.filled {
+        border-color: #4ECDC4;
+        background: rgba(78, 205, 196, 0.1);
+    }
+    
+    .instructions-footer {
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+    
+    /* Indicador de Nivel Compacto */
+    .level-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Indicador de Modo */
+    .mode-indicator {
+        position: fixed;
+        top: 140px;
+        right: 20px;
+        background: linear-gradient(45deg, #FF6B9D, #FF8E53);
+        color: white;
+        padding: 8px 15px;
+        border-radius: 20px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 0.9rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+        transition: all 0.3s ease;
+    }
+
+    .mode-indicator.click-mode {
+        background: linear-gradient(45deg, #FFE066, #FFA500);
+        color: #333;
+    }
+    
+    /* Área del Juego */
+    .game-area {
+        display: none;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .animals-section h3, .sequence-area h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #4ECDC4;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .animals-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .animal-item {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        cursor: grab;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        user-select: none;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        touch-action: none;
+    }
+    
+    .animal-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        border-color: #4ECDC4;
+    }
+    
+    .animal-item:active {
+        cursor: grabbing;
+        transform: scale(0.95);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .animal-item.dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+
+    .animal-item.selected {
+        border-color: #FFE066 !important;
+        border-width: 4px;
+        box-shadow: 0 0 20px rgba(255, 224, 102, 0.6);
+        transform: scale(1.1);
+    }
+
+    .animal-item.playing {
+        border-color: #4ECDC4 !important;
+        border-width: 4px;
+        box-shadow: 0 0 25px rgba(78, 205, 196, 0.8);
+        animation: pulse-glow 0.6s ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { 
+            box-shadow: 0 0 25px rgba(78, 205, 196, 0.8);
+            border-color: #4ECDC4;
+        }
+        50% { 
+            box-shadow: 0 0 35px rgba(78, 205, 196, 1);
+            border-color: #44A08D;
+        }
+    }
+    
+    .animal-emoji {
+        font-size: 3.5rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+    
+    .animal-name {
+        font-weight: 700;
+        color: #333;
+        font-size: 1rem;
+    }
+    
+    .sequence-area {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 20px;
+        border: 3px solid #6BCF7F;
+    }
+    
+    .sequence-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .sequence-title.correct {
+        color: #6BCF7F;
+        animation: celebrate 0.6s ease-in-out;
+    }
+    
+    .sequence-controls {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .sequence-controls .control-btn {
+        display: inline-block;
+        margin: 0;
+    }
+    
+    .sequence-slots {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        min-height: 200px;
+    }
+    
+    .sequence-slot {
+        background: rgba(255, 255, 255, 0.5);
+        border: 3px dashed #ccc;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px;
+        position: relative;
+        cursor: pointer;
+        touch-action: none;
+    }
+    
+    .sequence-slot .slot-number {
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .sequence-slot.drag-over {
+        border-color: #4ECDC4 !important;
+        background: rgba(76, 205, 196, 0.3) !important;
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(76, 205, 196, 0.5);
+    }
+    
+    .sequence-slot.incorrect {
+        border-color: #FF6B9D;
+        background: rgba(255, 107, 157, 0.2);
+        animation: shake 0.5s ease-in-out;
+    }
+
+    .sequence-slot.correct {
+        border-color: #6BCF7F !important;
+        background: rgba(107, 207, 127, 0.3) !important;
+        box-shadow: 0 0 20px rgba(107, 207, 127, 0.6);
+        animation: success-glow 0.8s ease-in-out;
+    }
+
+    .sequence-slot.error {
+        border-color: #FF6B9D !important;
+        background: rgba(255, 107, 157, 0.3) !important;
+        box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+        animation: error-shake 0.8s ease-in-out;
+    }
+
+    @keyframes success-glow {
+        0%, 100% { 
+            box-shadow: 0 0 20px rgba(107, 207, 127, 0.6);
+            transform: scale(1);
+        }
+        50% { 
+            box-shadow: 0 0 30px rgba(107, 207, 127, 0.9);
+            transform: scale(1.05);
+        }
+    }
+
+    @keyframes error-shake {
+        0%, 100% { 
+            transform: translateX(0);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+        }
+        25% { 
+            transform: translateX(-8px);
+            box-shadow: 0 0 25px rgba(255, 107, 157, 0.8);
+        }
+        75% { 
+            transform: translateX(8px);
+            box-shadow: 0 0 25px rgba(255, 107, 157, 0.8);
+        }
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        display: none;
+    }
+    
+    .control-btn.show {
+        display: inline-block;
+    }
+    
+    .control-btn.reset {
+        background: linear-gradient(45deg, #FF6B9D, #FF8E53);
+        box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        font-size: 1.5rem;
+    }
+    
+    .feedback {
+        text-align: center;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 20px 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+    
+    .feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .feedback.success {
+        background: rgba(107, 207, 127, 0.2);
+        color: #2d5a3d;
+        border: 2px solid #6BCF7F;
+    }
+    
+    .feedback.error {
+        background: rgba(255, 107, 157, 0.2);
+        color: #8B1538;
+        border: 2px solid #FF6B9D;
+    }
+    
+    .sound-status {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 2px solid #4ECDC4;
+    }
+    
+    .sound-status h4 {
+        margin: 0 0 10px 0;
+        color: #4ECDC4;
+        font-family: 'Fredoka One', cursive;
+    }
+    
+    .sound-indicators {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sound-indicator {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    
+    .sound-indicator.loaded {
+        background: rgba(107, 207, 127, 0.3);
+        color: #2d5a3d;
+        border: 2px solid #6BCF7F;
+    }
+    
+    .sound-indicator.fallback {
+        background: rgba(255, 230, 102, 0.3);
+        color: #8B6914;
+        border: 2px solid #FFE066;
+    }
+    
+    .score-board {
+        background: rgba(255, 230, 102, 0.3);
+        border: 3px solid #FFE066;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .score {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #333;
+        margin: 5px 0;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    @keyframes wiggle {
+        0%, 7% { transform: rotateZ(0); }
+        15% { transform: rotateZ(-5deg); }
+        20% { transform: rotateZ(3deg); }
+        25% { transform: rotateZ(-3deg); }
+        30% { transform: rotateZ(2deg); }
+        35% { transform: rotateZ(-1deg); }
+        40%, 100% { transform: rotateZ(0); }
+    }
+    
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .celebrate {
+        animation: celebrate 0.6s ease-in-out 3;
+    }
+    
+    /* Ocultar footer durante el juego */
+    .game-active footer {
+        display: none !important;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .game-container {
+            max-width: 95%;
+            padding: 10px;
+            margin: 5px auto;
+        }
+        
+        .game-area {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .animals-section, .sequence-area {
+            padding: 0;
+        }
+        
+        .animals-section h3, .sequence-area h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .sequence-slots {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        
+        .sequence-slot {
+            min-height: 80px;
+            padding: 8px;
+            aspect-ratio: 1;
+            border-width: 2px;
+        }
+        
+        .sequence-slot .animal-emoji {
+            font-size: 1.8rem;
+        }
+        
+        .sequence-slot .animal-name {
+            font-size: 0.7rem;
+        }
+        
+        .animals-container {
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 350px;
+            margin: 0 auto;
+            gap: 8px;
+        }
+        
+        .animal-item {
+            padding: 8px;
+            min-height: 80px;
+            border-radius: 10px;
+            aspect-ratio: 1;
+        }
+        
+        .animal-emoji {
+            font-size: 2rem;
+            margin-bottom: 4px;
+        }
+        
+        .animal-name {
+            font-size: 0.7rem;
+        }
+        
+        .controls {
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+        
+        .compact-score {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 10px auto;
+            display: none !important;
+        }
+        
+        .level-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 5px auto;
+            display: block !important;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+
+        .mode-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 5px auto;
+            display: block !important;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+        
+        .instructions-content {
+            padding: 1.5rem;
+            max-width: 95%;
+            margin: 10px;
+        }
+        
+        .start-button, .instructions-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        
+        .control-btn.reset {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            font-size: 1.2rem;
+        }
+        
+        .feedback {
+            font-size: 0.9rem;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+        }
+        
+        .game-instructions {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .animals-container {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            max-width: 280px;
+        }
+        
+        .animal-item {
+            padding: 6px;
+            min-height: 70px;
+            aspect-ratio: 1;
+        }
+        
+        .animal-emoji {
+            font-size: 1.6rem;
+        }
+        
+        .animal-name {
+            font-size: 0.65rem;
+        }
+        
+        .sequence-slots {
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            max-width: 280px;
+            gap: 6px;
+        }
+        
+        .sequence-slot {
+            min-height: 70px;
+            padding: 6px;
+            aspect-ratio: 1;
+        }
+        
+        .sequence-slot .animal-emoji {
+            font-size: 1.4rem;
+        }
+        
+        .sequence-slot .animal-name {
+            font-size: 0.6rem;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+        }
+        
+        .control-btn.reset {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .game-container {
+            max-width: 1400px;
+        }
+        
+        .game-area {
+            gap: 40px;
+        }
+        
+        .animals-container {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">🎵🐾 Secuencia de Animales</h1>
+        <p class="game-instructions">
+            ¡Escucha atentamente la secuencia de sonidos y coloca los animales en el orden correcto!<br>
+            <small>💡 Tip: Haz clic en cualquier animal para escuchar su sonido</small><br>
+            <small>🎮 Puedes arrastrar los animales O hacer click y luego click en el espacio</small>
+        </p>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div class="start-screen">
+        <div class="start-content">
+            <h2>🎮 ¡Bienvenido al Juego!</h2>
+            <p>Prepárate para un desafío auditivo y visual increíble</p>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-button">
+                    🚀 Comenzar Juego
+                </button>
+                <button id="instructions-btn" class="instructions-button">
+                    📖 Instrucciones
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="instructions-modal">
+        <div class="instructions-content">
+            <div class="instructions-header">
+                <h3>📖 ¿Cómo Jugar?</h3>
+                <button id="close-instructions" class="close-btn">✖</button>
+            </div>
+            
+            <div class="instructions-body">
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>🎵 Escucha la Secuencia</h4>
+                        <p>Primero escucharás una secuencia de sonidos de animales</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>🎮 Coloca los Animales</h4>
+                        <p>Arrastra los animales a las casillas O haz click en un animal y luego en una casilla</p>
+                    </div>
+                </div>
+
+                <div class="drag-demo">
+                    <div class="demo-animal">🐱</div>
+                    <div class="demo-arrow">➡️</div>
+                    <div class="demo-slot"></div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>✅ Comprueba tu Respuesta</h4>
+                        <p>Presiona "Comprobar" para ver si tu secuencia es correcta</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions-footer">
+                <button id="start-from-instructions" class="start-button">
+                    🎮 ¡Entendido, Empezar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de Nivel Compacto (se muestra durante el juego) -->
+    <div class="level-indicator">
+        🎯 Nivel <span class="level-value">1</span>
+    </div>
+
+    <!-- Indicador de Modo -->
+    <div class="mode-indicator">
+        🎮 Híbrido
+    </div>
+    
+    <!-- Elementos del juego ocultos inicialmente -->
+    <div class="game-elements" style="display: none;">
+        <!-- 
+        <div class="sound-status">
+            <h4>🔊 Estado de Sonidos</h4>
+            <div class="sound-indicators" id="soundIndicators">
+                Se llenarán dinámicamente
+            </div>
+        </div>
+        -->
+        
+        <div class="game-area">
+            <div class="animals-section">
+                <h3>🐾 Arrastra los Animales</h3>
+                <div class="animals-container" id="animalsContainer">
+                    <!-- Los animales se generarán dinámicamente -->
+                </div>
+            </div>
+            
+            <div class="sequence-area">
+                <h3 class="sequence-title" id="sequenceTitle">🎵 Secuencia</h3>
+                
+                <!-- Botón de reproducir antes de los slots -->
+                <div class="sequence-controls">
+                    <button id="playSequence" class="control-btn play">🔊 Reproducir Secuencia</button>
+                </div>
+                
+                <div class="sequence-slots" id="sequenceSlots">
+                    <!-- Los slots se generarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="resetGame" class="control-btn reset">🔄</button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+    </div>
+</div>
+
+<script>
+class AnimalSequenceGame {
+    constructor() {
+        console.log('Iniciando constructor del juego...');
+        this.animals = [
+            { emoji: '🐶', name: 'Perro', sound: 'woof', audioFile: 'perro', frequency: 200, duration: 0.3 },
+            { emoji: '🐱', name: 'Gato', sound: 'meow', audioFile: 'gato', frequency: 400, duration: 0.4 },
+            { emoji: '🐮', name: 'Vaca', sound: 'moo', audioFile: 'vaca', frequency: 150, duration: 0.6 },
+            { emoji: '🐷', name: 'Cerdo', sound: 'oink', audioFile: 'cerdo', frequency: 250, duration: 0.3 },
+            { emoji: '🐸', name: 'Rana', sound: 'ribbit', audioFile: 'rana', frequency: 800, duration: 0.2 },
+            { emoji: '🐦', name: 'Pájaro', sound: 'tweet', audioFile: 'pajaro', frequency: 1000, duration: 0.2 }
+        ];
+        
+        this.currentSequence = [];
+        this.userSequence = [];
+        this.score = 0;
+        this.level = 1;
+        this.isPlaying = false;
+        this.gameStarted = false;
+        this.gameState = 'waiting';
+        this.consecutiveCorrect = 0;
+        this.audioContext = null;
+        this.audioElements = {};
+        this.gameAudio = {};
+        this.instructionsAudio = null;
+        this.autoPlayTimeout = null;
+        this.selectedAnimal = null;
+        this.clickMode = true; // Siempre activo
+        this.hasShownSelectionMessage = false;
+        
+        console.log('Propiedades inicializadas, llamando a init()...');
+        this.init();
+        console.log('Constructor terminado');
+    }
+    
+    init() {
+        console.log('Ejecutando init()...');
+        
+        try {
+            console.log('1. Inicializando AudioContext...');
+            this.initAudioContext();
+            
+            console.log('2. Configurando audio del juego...');
+            this.setupGameAudio();
+            
+            console.log('3. Precargando archivos de audio...');
+            this.preloadAudioFiles();
+            
+            console.log('4. Creando animales...');
+            this.createAnimals();
+            
+            console.log('5. Creando slots de secuencia...');
+            this.createSequenceSlots();
+            
+            console.log('6. Configurando event listeners...');
+            this.setupEventListeners();
+            
+            console.log('7. Configurando instrucciones...');
+            this.setupInstructions();
+            
+            console.log('8. Configurando pantalla de inicio...');
+            this.setupStartScreen();
+            
+            console.log('9. Actualizando UI...');
+            this.updateUI();
+            
+            console.log('10. Ocultando elementos del juego...');
+            this.hideGameElements();
+            
+            console.log('Init() completado exitosamente');
+        } catch (error) {
+            console.error('Error en init():', error);
+        }
+    }
+
+    hideGameElements() {
+        const gameElements = document.querySelector('.game-elements');
+        const gameArea = document.querySelector('.game-area');
+        const controls = document.querySelector('.controls');
+        const feedback = document.getElementById('feedback');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const modeIndicator = document.querySelector('.mode-indicator');
+        
+        if (gameElements) gameElements.style.display = 'none';
+        if (gameArea) gameArea.style.display = 'none';
+        if (controls) controls.style.display = 'none';
+        if (feedback) feedback.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        if (modeIndicator) modeIndicator.style.display = 'none';
+    }
+
+    setupGameAudio() {
+        // Sonidos del juego
+        const gameAudioFiles = {
+            correct: 'correcto',
+            incorrect: 'incorrecto',
+            start: 'inicio_animales',
+            complete: 'completado_animales',
+            instructions: 'instrucciones_animales'
+        };
+
+        Object.keys(gameAudioFiles).forEach(key => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.8;
+            
+            const audioFile = gameAudioFiles[key];
+            const formats = ['mp3', 'wav', 'ogg'];
+            
+            for (const format of formats) {
+                try {
+                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    this.gameAudio[key] = audio;
+                    break;
+                } catch (e) {
+                    console.log(`No se pudo cargar ${audioFile}.${format}`);
+                }
+            }
+            
+            if (!this.gameAudio[key]) {
+                console.log(`Usando sonido sintético para ${key}`);
+                this.gameAudio[key] = null;
+            }
+        });
+    }
+
+    setupInstructions() {
+        console.log('Configurando instrucciones...');
+        
+        const instructionsBtn = document.getElementById('instructions-btn');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const closeInstructions = document.getElementById('close-instructions');
+
+        console.log('instructionsBtn encontrado:', instructionsBtn);
+        console.log('instructionsModal encontrado:', instructionsModal);
+        console.log('closeInstructions encontrado:', closeInstructions);
+
+        if (instructionsBtn) {
+            console.log('Agregando event listener al botón Instrucciones');
+            instructionsBtn.addEventListener('click', (e) => {
+                console.log('📖 CLICK en Instrucciones detectado!', e);
+                this.showInstructions();
+            });
+        } else {
+            console.error('❌ No se encontró el botón instructions-btn');
+        }
+
+        if (closeInstructions) {
+            closeInstructions.addEventListener('click', (e) => {
+                console.log('✖️ CLICK en Cerrar Instrucciones detectado!', e);
+                this.hideInstructions();
+            });
+        } else {
+            console.error('❌ No se encontró el botón close-instructions');
+        }
+
+        if (instructionsModal) {
+            instructionsModal.addEventListener('click', (e) => {
+                if (e.target === instructionsModal) {
+                    console.log('🔄 CLICK fuera del modal detectado');
+                    this.hideInstructions();
+                }
+            });
+        } else {
+            console.error('❌ No se encontró el modal instructions-modal');
+        }
+        
+        console.log('setupInstructions() completado');
+    }
+
+    setupStartScreen() {
+        console.log('Configurando pantalla de inicio...');
+        
+        const startButton = document.getElementById('start-game-btn');
+        const startFromInstructionsButton = document.getElementById('start-from-instructions');
+        
+        console.log('startButton encontrado:', startButton);
+        console.log('startFromInstructionsButton encontrado:', startFromInstructionsButton);
+        
+        if (startButton) {
+            console.log('Agregando event listener al botón Comenzar Juego');
+            startButton.addEventListener('click', (e) => {
+                console.log('🎮 CLICK en Comenzar Juego detectado!', e);
+                this.startGame();
+            });
+        } else {
+            console.error('❌ No se encontró el botón start-game-btn');
+        }
+        
+        if (startFromInstructionsButton) {
+            console.log('Agregando event listener al botón Empezar desde Instrucciones');
+            startFromInstructionsButton.addEventListener('click', (e) => {
+                console.log('🎮 CLICK en Empezar desde Instrucciones detectado!', e);
+                this.hideInstructions();
+                setTimeout(() => this.startGame(), 300);
+            });
+        } else {
+            console.log('⚠️ No se encontró el botón start-from-instructions (normal hasta que se abran las instrucciones)');
+        }
+        
+        console.log('setupStartScreen() completado');
+    }
+
+    showInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+                this.startDragAnimation();
+            }, 10);
+
+            // Reproducir audio de instrucciones
+            this.instructionsAudio = this.gameAudio['instructions'];
+            if (this.instructionsAudio) {
+                this.instructionsAudio.currentTime = 0;
+                this.instructionsAudio.play().catch(console.log);
+            }
+        }
+    }
+
+    hideInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+            
+            // Detener audio de instrucciones
+            if (this.instructionsAudio) {
+                this.instructionsAudio.pause();
+                this.instructionsAudio.currentTime = 0;
+            }
+        }
+    }
+
+    startDragAnimation() {
+        const demoAnimal = document.querySelector('.demo-animal');
+        const demoSlot = document.querySelector('.demo-slot');
+
+        if (!demoAnimal || !demoSlot) return;
+
+        const animate = () => {
+            // Estado inicial: emoji en posición original
+            demoAnimal.style.transform = 'translate(0, 0)';
+            demoAnimal.style.opacity = '1';
+            demoAnimal.style.zIndex = '1';
+            demoSlot.classList.remove('filled');
+            demoSlot.innerHTML = '';
+
+            setTimeout(() => {
+                // Mover directamente a la derecha hacia el recuadro
+                demoAnimal.style.transform = 'translate(120px, 0)';
+                demoAnimal.style.zIndex = '1000';
+            }, 1000);
+
+            setTimeout(() => {
+                // Colocar el emoji en el recuadro y hacer que desaparezca el original
+                demoSlot.classList.add('filled');
+                demoSlot.innerHTML = '<div class="animal-emoji">🐱</div>';
+                demoAnimal.style.opacity = '0';
+            }, 2500);
+
+            setTimeout(() => {
+                // Reiniciar la animación
+                animate();
+            }, 4000);
+        };
+
+        animate();
+    }
+
+    startGame() {
+        console.log('Iniciando el juego...');
+        this.gameStarted = true;
+        this.gameState = 'playing';
+        this.score = 0;
+        this.level = 1;
+        this.consecutiveCorrect = 0;
+        
+        // Agregar clase para ocultar footer
+        document.body.classList.add('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        if (startScreen) {
+            console.log('Ocultando pantalla de inicio');
+            startScreen.style.display = 'none';
+        }
+
+        this.showGameElements();
+        this.playGameSound('start');
+        this.generateNewSequence();
+        this.updateUI();
+        
+        // Auto-reproducir secuencia después de 3 segundos
+        this.autoPlayTimeout = setTimeout(() => {
+            this.playSequence();
+        }, 3000);
+        
+        console.log('Juego iniciado correctamente');
+    }
+
+    showGameElements() {
+        console.log('Mostrando elementos del juego...');
+        const gameElements = document.querySelector('.game-elements');
+        const gameArea = document.querySelector('.game-area');
+        const controls = document.querySelector('.controls');
+        const feedback = document.getElementById('feedback');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const modeIndicator = document.querySelector('.mode-indicator');
+        const playButton = document.getElementById('playSequence');
+        const resetButton = document.getElementById('resetGame');
+        
+        if (gameElements) {
+            console.log('Mostrando .game-elements');
+            gameElements.style.display = 'block';
+        }
+        if (gameArea) {
+            console.log('Mostrando .game-area');
+            gameArea.style.display = 'grid';
+        }
+        if (controls) {
+            console.log('Mostrando .controls');
+            controls.style.display = 'flex';
+        }
+        if (feedback) {
+            console.log('Mostrando #feedback');
+            feedback.style.display = 'block';
+        }
+        if (levelIndicator) {
+            console.log('Mostrando .level-indicator');
+            levelIndicator.style.display = 'block';
+        }
+        if (modeIndicator) {
+            console.log('Mostrando .mode-indicator');
+            modeIndicator.style.display = 'block';
+        }
+        if (playButton) {
+            console.log('Mostrando botón play');
+            playButton.classList.add('show');
+        }
+        if (resetButton) {
+            console.log('Mostrando botón reset');
+            resetButton.classList.add('show');
+        }
+        
+        this.updateModeIndicator();
+    }
+
+    playGameSound(soundType) {
+        const audio = this.gameAudio[soundType];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(console.log);
+        } else {
+            this.createSyntheticGameSound(soundType);
+        }
+    }
+
+    createSyntheticGameSound(soundType) {
+        if (!this.audioContext) return;
+
+        const frequencies = {
+            correct: [523, 659, 784],
+            incorrect: [200, 150, 100],
+            start: [440, 554, 659],
+            complete: [523, 659, 784, 1047],
+            instructions: [440, 493, 523]
+        };
+
+        const freq = frequencies[soundType] || [440];
+        
+        freq.forEach((f, i) => {
+            setTimeout(() => {
+                this.createSyntheticSound(null, f, 0.2);
+            }, i * 200);
+        });
+    }
+
+    createSyntheticSound(animal, frequency = 440, duration = 0.3) {
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+    
+    preloadAudioFiles() {
+        // Ya no usamos indicadores visuales, pero mantenemos la carga de audio
+        this.animals.forEach((animal, index) => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.7;
+            
+            const formats = ['mp3', 'wav', 'ogg'];
+            let loaded = false;
+            
+            const tryFormat = (formatIndex) => {
+                if (formatIndex >= formats.length || loaded) return;
+                
+                const format = formats[formatIndex];
+                const audioUrl = `/static/sounds/${animal.audioFile}.${format}`;
+                
+                console.log(`🔍 Intentando cargar: ${audioUrl}`);
+                audio.src = audioUrl;
+                
+                const onLoad = () => {
+                    if (!loaded) {
+                        loaded = true;
+                        console.log(`✅ Sonido cargado exitosamente: ${animal.name} (${format})`);
+                        audio.removeEventListener('canplaythrough', onLoad);
+                        audio.removeEventListener('error', onError);
+                    }
+                };
+                
+                const onError = (error) => {
+                    console.log(`❌ Error cargando: ${audioUrl}`, error);
+                    audio.removeEventListener('canplaythrough', onLoad);
+                    audio.removeEventListener('error', onError);
+                    
+                    setTimeout(() => tryFormat(formatIndex + 1), 100);
+                };
+                
+                audio.addEventListener('canplaythrough', onLoad);
+                audio.addEventListener('error', onError);
+                audio.load();
+            };
+            
+            tryFormat(0);
+            
+            setTimeout(() => {
+                if (!loaded) {
+                    console.log(`🔄 Timeout alcanzado para: ${animal.name}, usando fallback sintético`);
+                }
+            }, 5000);
+            
+            this.audioElements[index] = audio;
+        });
+    }
+    
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Audio Context no disponible:', e);
+            this.audioContext = null;
+        }
+    }
+    
+    playAnimalSound(animalIndex) {
+        const audio = this.audioElements[animalIndex];
+        const animal = this.animals[animalIndex];
+        
+        if (audio && audio.readyState >= 2) {
+            audio.currentTime = 0;
+            audio.play().catch(e => {
+                console.log('Error reproduciendo audio:', e);
+                this.playSyntheticSound(animalIndex);
+            });
+        } else {
+            console.log(`🔄 Usando sonido sintético para: ${animal.name}`);
+            this.playSyntheticSound(animalIndex);
+        }
+    }
+    
+    playSyntheticSound(animalIndex) {
+        if (!this.audioContext) {
+            this.playTextToSpeech(this.animals[animalIndex]);
+            return;
+        }
+        
+        const animal = this.animals[animalIndex];
+        this.createSyntheticSound(animal, animal.frequency, animal.duration);
+    }
+    
+    playTextToSpeech(animal) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(`${animal.sound}`);
+            utterance.rate = 1.2;
+            utterance.pitch = 1.2;
+            speechSynthesis.speak(utterance);
+        }
+    }
+    
+    createAnimals() {
+        const container = document.getElementById('animalsContainer');
+        container.innerHTML = '';
+        
+        this.animals.forEach((animal, index) => {
+            const animalDiv = document.createElement('div');
+            animalDiv.className = 'animal-item';
+            animalDiv.draggable = true;
+            animalDiv.dataset.animalIndex = index;
+            animalDiv.innerHTML = `
+                <div class="animal-emoji">${animal.emoji}</div>
+                <div class="animal-name">${animal.name}</div>
+            `;
+            
+            animalDiv.addEventListener('click', () => {
+                // Prevenir interacción si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    this.showFeedback('🎵 Espera a que termine la secuencia para seleccionar animales', 'info');
+                    return;
+                }
+                
+                // Ambos modos activos: reproducir sonido Y seleccionar
+                this.playAnimalSound(index);
+                this.selectAnimal(index);
+            });
+            
+            animalDiv.addEventListener('dragstart', (e) => {
+                // Prevenir drag si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    e.preventDefault();
+                    this.showFeedback('🎵 Espera a que termine la secuencia para arrastrar animales', 'info');
+                    return;
+                }
+                this.handleDragStart(e);
+            });
+            animalDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
+            
+            // Soporte táctil mejorado
+            this.addTouchSupport(animalDiv);
+            
+            container.appendChild(animalDiv);
+        });
+    }
+
+    addTouchSupport(element) {
+        let isDragging = false;
+        let draggedElement = null;
+        let touchStartTime = 0;
+        
+        element.addEventListener('touchstart', (e) => {
+            // Prevenir touch si se está reproduciendo la secuencia
+            if (this.isPlaying) {
+                e.preventDefault();
+                this.showFeedback('🎵 Espera a que termine la secuencia para tocar animales', 'info');
+                return;
+            }
+            
+            touchStartTime = Date.now();
+            e.preventDefault();
+            if (element.classList.contains('animal-item')) {
+                draggedElement = element;
+                element.style.opacity = '0.7';
+                element.style.transform = 'scale(1.1)';
+                element.style.zIndex = '1000';
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchmove', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            isDragging = true;
+            const touch = e.touches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Limpiar todos los highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            // Agregar highlight al slot actual
+            if (elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot) {
+                    slot.classList.add('drag-over');
+                }
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchend', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Restaurar estilo
+            draggedElement.style.opacity = '';
+            draggedElement.style.transform = '';
+            draggedElement.style.zIndex = '';
+            
+            // Si fue un tap corto (menos de 300ms) y no se movió mucho, reproducir sonido y seleccionar
+            if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('animal-item')) {
+                const animalIndex = parseInt(draggedElement.dataset.animalIndex);
+                this.playAnimalSound(animalIndex);
+                this.selectAnimal(animalIndex);
+            }
+            // Si fue un tap corto en un slot y hay animal seleccionado
+            else if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('sequence-slot') && this.selectedAnimal !== null) {
+                const slotIndex = parseInt(draggedElement.dataset.slotIndex);
+                this.placeAnimalInSlot(this.selectedAnimal, slotIndex);
+            }
+            // Si fue un drag, procesar drop
+            else if (isDragging && elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot) {
+                    const animalIndex = parseInt(draggedElement.dataset.animalIndex);
+                    const slotIndex = parseInt(slot.dataset.slotIndex);
+                    
+                    slot.classList.remove('drag-over');
+                    this.placeAnimalInSlot(animalIndex, slotIndex);
+                }
+            }
+            
+            // Limpiar highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            isDragging = false;
+        }, { passive: false });
+    }
+    
+    createSequenceSlots() {
+        const container = document.getElementById('sequenceSlots');
+        container.innerHTML = '';
+        
+        // Nueva lógica de dificultad: 2, 3, 3, 4, 4, 5, 5, 6, 6, 6
+        let sequenceLength;
+        if (this.level === 1) sequenceLength = 2;
+        else if (this.level === 2 || this.level === 3) sequenceLength = 3;
+        else if (this.level === 4 || this.level === 5) sequenceLength = 4;
+        else if (this.level === 6 || this.level === 7) sequenceLength = 5;
+        else sequenceLength = 6; // niveles 8, 9, 10+
+        
+        this.userSequence = new Array(sequenceLength).fill(null);
+        
+        for (let i = 0; i < sequenceLength; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'sequence-slot';
+            slot.dataset.slotIndex = i;
+            slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; pointer-events: none; user-select: none;">${i + 1}</div>`;
+            
+            slot.addEventListener('dragover', (e) => this.handleDragOver(e));
+            slot.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+            slot.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            slot.addEventListener('drop', (e) => this.handleDrop(e));
+            
+            // Soporte para modo click
+            slot.addEventListener('click', () => {
+                // Prevenir interacción con slots si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    this.showFeedback('🎵 Espera a que termine la secuencia para colocar animales', 'info');
+                    return;
+                }
+                
+                if (this.selectedAnimal !== null) {
+                    this.placeAnimalInSlot(this.selectedAnimal, i);
+                }
+            });
+            
+            // Soporte táctil mejorado
+            this.addTouchSupport(slot);
+            
+            container.appendChild(slot);
+        }
+    }
+    
+    setupEventListeners() {
+        const playButton = document.getElementById('playSequence');
+        const resetButton = document.getElementById('resetGame');
+        
+        if (playButton) {
+            playButton.addEventListener('click', () => {
+                this.playSequence();
+            });
+        }
+        
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                this.resetGame();
+            });
+        }
+    }
+
+    updateModeIndicator() {
+        const modeIndicator = document.querySelector('.mode-indicator');
+        if (modeIndicator) {
+            modeIndicator.textContent = '🎮 Híbrido';
+            modeIndicator.classList.add('click-mode');
+        }
+    }
+
+    selectAnimal(animalIndex) {
+        this.clearSelection();
+        this.selectedAnimal = animalIndex;
+        
+        const animalElements = document.querySelectorAll('.animal-item');
+        if (animalElements[animalIndex]) {
+            animalElements[animalIndex].classList.add('selected');
+        }
+        
+        // Solo mostrar mensaje si es la primera selección
+        if (!this.hasShownSelectionMessage) {
+            this.showFeedback('🐾 Animal seleccionado. Ahora haz click en un espacio de la secuencia o arrastra.', 'success');
+            this.hasShownSelectionMessage = true;
+        }
+    }
+
+    clearSelection() {
+        this.selectedAnimal = null;
+        document.querySelectorAll('.animal-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+    }
+
+    placeAnimalInSlot(animalIndex, slotIndex) {
+        // Prevenir colocación si se está reproduciendo la secuencia
+        if (this.isPlaying) {
+            this.showFeedback('🎵 Espera a que termine la secuencia para colocar animales', 'info');
+            return;
+        }
+        
+        const animal = this.animals[animalIndex];
+        const slot = document.querySelector(`[data-slot-index="${slotIndex}"]`);
+        
+        if (!slot) return;
+        
+        slot.classList.add('filled');
+        slot.innerHTML = `
+            <div class="animal-emoji">${animal.emoji}</div>
+            <div class="animal-name">${animal.name}</div>
+        `;
+        
+        this.userSequence[slotIndex] = animalIndex;
+        this.clearSelection();
+        this.playAnimalSound(animalIndex);
+        
+        // Verificar si esta posición es correcta
+        if (this.currentSequence[slotIndex] === animalIndex) {
+            // Correcto: bordes verdes
+            slot.classList.add('correct');
+            setTimeout(() => slot.classList.remove('correct'), 1000);
+        } else {
+            // Incorrecto: bordes rojos y limpiar después del audio
+            slot.classList.add('error');
+            this.playGameSound('incorrect');
+            
+            // Esperar a que termine el audio de "incorrecto" antes de limpiar
+            setTimeout(() => {
+                slot.classList.remove('error', 'filled');
+                slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; pointer-events: none; user-select: none;">${slotIndex + 1}</div>`;
+                this.userSequence[slotIndex] = null;
+                
+                // Reproducir automáticamente la secuencia después de 2 segundos
+                setTimeout(() => {
+                    this.playSequence();
+                }, 2000);
+            }, 2000); // Esperamos 2 segundos para que termine el audio
+            return;
+        }
+        
+        // Verificar automáticamente si la secuencia está completa
+        if (this.userSequence.every(slot => slot !== null)) {
+            setTimeout(() => {
+                this.checkSequenceAutomatically();
+            }, 500);
+        }
+    }
+    
+    generateNewSequence() {
+        // Nueva lógica de dificultad
+        let sequenceLength;
+        if (this.level === 1) sequenceLength = 2;
+        else if (this.level === 2 || this.level === 3) sequenceLength = 3;
+        else if (this.level === 4 || this.level === 5) sequenceLength = 4;
+        else if (this.level === 6 || this.level === 7) sequenceLength = 5;
+        else sequenceLength = 6; // niveles 8, 9, 10+
+        
+        this.currentSequence = [];
+        
+        for (let i = 0; i < sequenceLength; i++) {
+            const randomIndex = Math.floor(Math.random() * this.animals.length);
+            this.currentSequence.push(randomIndex);
+        }
+        
+        this.createSequenceSlots();
+        
+        // Resetear título de secuencia
+        const sequenceTitle = document.getElementById('sequenceTitle');
+        if (sequenceTitle) {
+            sequenceTitle.textContent = '🎵 Secuencia';
+            sequenceTitle.classList.remove('correct');
+        }
+        
+        this.showFeedback('🎵 ¡Nueva secuencia generada! Escucha atentamente...', 'success');
+    }
+    
+    async playSequence() {
+        if (this.isPlaying) return;
+        
+        this.isPlaying = true;
+        this.showFeedback('🎵 Escuchando secuencia... ¡Presta atención!', 'success');
+        
+        for (let i = 0; i < this.currentSequence.length; i++) {
+            const animalIndex = this.currentSequence[i];
+            
+            this.highlightAnimal(animalIndex);
+            this.playAnimalSound(animalIndex);
+            
+            await this.delay(1200);
+            
+            this.removeHighlight(animalIndex);
+            
+            if (i < this.currentSequence.length - 1) {
+                await this.delay(300);
+            }
+        }
+        
+        this.isPlaying = false;
+        this.showFeedback('✨ ¡Secuencia completada! Ahora arrastra los animales en el orden correcto.', 'success');
+    }
+    
+    highlightAnimal(animalIndex) {
+        const animalElements = document.querySelectorAll('.animal-item');
+        if (animalElements[animalIndex]) {
+            animalElements[animalIndex].classList.add('playing');
+        }
+    }
+    
+    removeHighlight(animalIndex) {
+        const animalElements = document.querySelectorAll('.animal-item');
+        if (animalElements[animalIndex]) {
+            animalElements[animalIndex].classList.remove('playing');
+        }
+    }
+    
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.animalIndex);
+        e.target.classList.add('dragging');
+    }
+    
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+    
+    handleDragOver(e) {
+        e.preventDefault();
+    }
+    
+    handleDragEnter(e) {
+        const target = e.target.closest('.sequence-slot');
+        if (target) {
+            target.classList.add('drag-over');
+        }
+    }
+    
+    handleDragLeave(e) {
+        const target = e.target.closest('.sequence-slot');
+        if (target) {
+            target.classList.remove('drag-over');
+        }
+    }
+    
+    handleDrop(e) {
+        e.preventDefault();
+        
+        // Prevenir drop si se está reproduciendo la secuencia
+        if (this.isPlaying) {
+            this.showFeedback('🎵 Espera a que termine la secuencia para soltar animales', 'info');
+            return;
+        }
+        
+        const target = e.target.closest('.sequence-slot');
+        if (!target) return;
+        
+        const animalIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const slotIndex = parseInt(target.dataset.slotIndex);
+        const animal = this.animals[animalIndex];
+        
+        target.classList.remove('drag-over');
+        target.classList.add('filled');
+        target.innerHTML = `
+            <div class="animal-emoji">${animal.emoji}</div>
+            <div class="animal-name">${animal.name}</div>
+        `;
+        
+        this.userSequence[slotIndex] = animalIndex;
+        
+        this.playAnimalSound(animalIndex);
+        
+        // Verificar si esta posición es correcta
+        if (this.currentSequence[slotIndex] === animalIndex) {
+            // Correcto: bordes verdes
+            target.classList.add('correct');
+            setTimeout(() => target.classList.remove('correct'), 1000);
+        } else {
+            // Incorrecto: bordes rojos y limpiar después del audio
+            target.classList.add('error');
+            this.playGameSound('incorrect');
+            
+            // Esperar a que termine el audio de "incorrecto" antes de limpiar
+            setTimeout(() => {
+                target.classList.remove('error', 'filled');
+                target.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; pointer-events: none; user-select: none;">${slotIndex + 1}</div>`;
+                this.userSequence[slotIndex] = null;
+                
+                // Reproducir automáticamente la secuencia después de 2 segundos
+                setTimeout(() => {
+                    this.playSequence();
+                }, 2000);
+            }, 2000); // Esperamos 2 segundos para que termine el audio
+            return;
+        }
+        
+        // Verificar automáticamente si la secuencia está completa
+        if (this.userSequence.every(slot => slot !== null)) {
+            setTimeout(() => {
+                this.checkSequenceAutomatically();
+            }, 500);
+        }
+    }
+    
+    checkSequenceAutomatically() {
+        const isCorrect = this.currentSequence.every((animal, index) => 
+            animal === this.userSequence[index]
+        );
+        
+        const sequenceTitle = document.getElementById('sequenceTitle');
+        
+        if (isCorrect) {
+            this.score += this.level * 10;
+            this.consecutiveCorrect++;
+            this.updateScore();
+            this.playGameSound('correct');
+            
+            if (sequenceTitle) {
+                sequenceTitle.textContent = '🎵 ¡Secuencia Correcta!';
+                sequenceTitle.classList.add('correct');
+            }
+            
+            this.showFeedback(`🎉 ¡Excelente! ¡Ganaste ${this.level * 10} puntos!`, 'success');
+            this.celebrateSuccess();
+            
+            setTimeout(() => {
+                this.level++;
+                if (this.level > 10) {
+                    this.completeGame();
+                } else {
+                    this.generateNewSequence();
+                    this.updateLevel();
+                    // Auto-reproducir siguiente secuencia
+                    this.autoPlayTimeout = setTimeout(() => {
+                        this.playSequence();
+                    }, 2000);
+                }
+            }, 2000);
+        } else {
+            this.consecutiveCorrect = 0;
+            this.playGameSound('incorrect');
+            
+            if (sequenceTitle) {
+                sequenceTitle.textContent = '🎵 Secuencia Incorrecta';
+                sequenceTitle.classList.remove('correct');
+            }
+            
+            this.showFeedback('❌ ¡Inténtalo de nuevo! La secuencia no es correcta.', 'error');
+            this.shakeAndClearSequence();
+        }
+    }
+
+    shakeAndClearSequence() {
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach(slot => {
+            slot.classList.add('error');
+            setTimeout(() => {
+                slot.classList.remove('error', 'filled');
+                slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; pointer-events: none; user-select: none;">${parseInt(slot.dataset.slotIndex) + 1}</div>`;
+            }, 2000); // Esperamos más tiempo para el audio
+        });
+        
+        // Limpiar la secuencia del usuario
+        this.userSequence = new Array(this.userSequence.length).fill(null);
+        this.clearSelection();
+        
+        // Reproducir la secuencia correcta automáticamente después de 2 segundos
+        setTimeout(() => {
+            this.playSequence();
+        }, 2000);
+    }
+    
+    celebrateSuccess() {
+        const sequenceArea = document.querySelector('.sequence-area');
+        if (sequenceArea) {
+            sequenceArea.classList.add('celebrate');
+            setTimeout(() => {
+                sequenceArea.classList.remove('celebrate');
+            }, 1800);
+        }
+    }
+
+    completeGame() {
+        this.gameState = 'complete';
+        this.playGameSound('complete');
+        this.showFeedback(`🏆 ¡FELICITACIONES! Completaste todos los niveles con ${this.score} puntos!`, 'success');
+        
+        setTimeout(() => {
+            if (confirm('¿Quieres jugar de nuevo?')) {
+                this.resetGame();
+            }
+        }, 3000);
+    }
+    
+    resetGame() {
+        // Limpiar timeouts
+        if (this.autoPlayTimeout) {
+            clearTimeout(this.autoPlayTimeout);
+            this.autoPlayTimeout = null;
+        }
+        
+        // Remover clase para mostrar footer
+        document.body.classList.remove('game-active');
+        
+        this.score = 0;
+        this.level = 1;
+        this.consecutiveCorrect = 0;
+        this.gameState = 'playing';
+        this.gameStarted = false;
+        
+        // Resetear título de secuencia
+        const sequenceTitle = document.getElementById('sequenceTitle');
+        if (sequenceTitle) {
+            sequenceTitle.textContent = '🎵 Secuencia';
+            sequenceTitle.classList.remove('correct');
+        }
+        
+        this.hideGameElements();
+        this.updateScore();
+        this.updateLevel();
+        this.clearSelection();
+        this.clickMode = true; // Siempre activo
+        this.hasShownSelectionMessage = false;
+        
+        // Mostrar pantalla de inicio
+        const startScreen = document.querySelector('.start-screen');
+        if (startScreen) {
+            startScreen.style.display = 'flex';
+        }
+        
+        this.showFeedback('🔄 ¡Juego reiniciado! ¡Empecemos de nuevo!', 'success');
+    }
+    
+    updateScore() {
+        // Solo mantener el score internamente para la lógica del juego
+        console.log(`Puntuación actual: ${this.score}`);
+    }
+    
+    updateLevel() {
+        const levelIndicator = document.querySelector('.level-indicator .level-value');
+        if (levelIndicator) {
+            levelIndicator.textContent = this.level;
+        }
+        console.log(`Nivel actual: ${this.level}`);
+    }
+
+    updateUI() {
+        this.updateScore();
+        this.updateLevel();
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameArea = document.querySelector('.game-area');
+        const levelIndicator = document.querySelector('.level-indicator');
+        
+        if (this.gameStarted) {
+            if (startScreen) startScreen.style.display = 'none';
+            if (gameArea) gameArea.style.display = 'grid';
+            if (levelIndicator) levelIndicator.style.display = 'block';
+        } else {
+            if (startScreen) startScreen.style.display = 'flex';
+            if (gameArea) gameArea.style.display = 'none';
+            if (levelIndicator) levelIndicator.style.display = 'none';
+        }
+    }
+    
+    showFeedback(message, type) {
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+    }
+}
+
+// Inicializar el juego cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM cargado, inicializando juego...');
+    try {
+        const game = new AnimalSequenceGame();
+        console.log('Juego inicializado exitosamente:', game);
+    } catch (error) {
+        console.error('Error al inicializar el juego:', error);
+    }
+});
+</script>
+{% endblock %}

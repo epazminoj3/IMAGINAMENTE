@@ -1,0 +1,1338 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}🧠💝 Memoria de Cartas - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        color: white;
+        font-family: 'Fredoka One', cursive;
+        min-height: 100vh;
+        position: relative;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-title {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        background: linear-gradient(45deg, #ff6b6b, #feca57);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .game-instructions {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Pantalla de Inicio */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 40vh;
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .start-content h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: white;
+    }
+    
+    .start-content p {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        color: rgba(255,255,255,0.9);
+    }
+    
+    .start-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .start-button, .instructions-button {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .instructions-button {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+    }
+    
+    .start-button:hover, .instructions-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Modal de Instrucciones */
+    .instructions-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .instructions-modal.show {
+        opacity: 1;
+    }
+
+    .instructions-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #333;
+        text-align: left;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        animation: modalSlideIn 0.3s ease;
+    }
+
+    .instructions-modal.show .instructions-content {
+        transform: scale(1);
+    }
+
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+
+    .instructions-header h3 {
+        color: #9B59B6;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .close-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #9B59B6;
+    }
+
+    .step-number {
+        background: #9B59B6;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .step-text h4 {
+        color: #2c3e50;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .step-text p {
+        color: #5a6c7d;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .instructions-footer {
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+
+    /* Indicador de Nivel */
+    .level-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #9B59B6, #8E44AD);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Área del Juego */
+    .game-elements {
+        display: none;
+    }
+
+    .game-stats {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-size: 1.4rem;
+        font-weight: bold;
+    }
+
+    /* Tablero de cartas */
+    .cards-board {
+        display: grid;
+        gap: 10px;
+        justify-content: center;
+        margin: 20px 0;
+        perspective: 1000px;
+    }
+
+    .cards-board.easy {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 300px;
+        margin: 20px auto;
+    }
+
+    .cards-board.medium {
+        grid-template-columns: repeat(4, 1fr);
+        max-width: 400px;
+        margin: 20px auto;
+    }
+
+    .cards-board.hard {
+        grid-template-columns: repeat(5, 1fr);
+        max-width: 500px;
+        margin: 20px auto;
+    }
+
+    .memory-card {
+        aspect-ratio: 1;
+        background: linear-gradient(45deg, #ff9a9e, #fecfef);
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.6s ease;
+        transform-style: preserve-3d;
+        position: relative;
+        border: 3px solid rgba(255,255,255,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .memory-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    .memory-card.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .memory-card.matched {
+        transform: rotateY(180deg) scale(1.1);
+        box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
+        border-color: #2ECC71;
+    }
+
+    .card-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+
+    .card-back {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        font-size: 1.5rem;
+    }
+
+    .card-front {
+        background: white;
+        transform: rotateY(180deg);
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    /* Controles */
+    .game-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+
+    .control-btn {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        font-family: 'Fredoka One', cursive;
+    }
+
+    .control-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .control-btn.reset {
+        background: linear-gradient(45deg, #E74C3C, #C0392B);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        font-size: 1.5rem;
+        display: none;
+    }
+
+    .control-btn.reset.show {
+        display: block;
+    }
+
+    .difficulty-selector {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .difficulty-selector h3 {
+        margin-bottom: 15px;
+        color: white;
+    }
+
+    .difficulty-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .difficulty-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1rem;
+    }
+
+    .difficulty-btn:hover, .difficulty-btn.active {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+        transform: scale(1.05);
+    }
+
+    /* Feedback */
+    .feedback {
+        text-align: center;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 20px 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        display: none;
+    }
+
+    .feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+        display: block;
+    }
+
+    .feedback.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #196F3D;
+        border: 2px solid #2ECC71;
+    }
+
+    .feedback.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #922B21;
+        border: 2px solid #E74C3C;
+    }
+
+    /* Modal de completado */
+    .completion-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .completion-modal.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .completion-modal-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 40px;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        animation: completionSlideIn 0.5s ease;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    @keyframes completionSlideIn {
+        from {
+            transform: scale(0.5) translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .completion-modal-content h3 {
+        color: white;
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        animation: celebrate 1s ease-in-out infinite;
+    }
+
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .completion-message {
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .completion-message p {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .final-stats {
+        background: rgba(255,255,255,0.2);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    .completion-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .completion-btn {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        min-width: 180px;
+    }
+
+    .completion-btn.play-again {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+    }
+
+    .completion-btn.go-home {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+    }
+
+    .completion-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Ocultar footer durante el juego */
+    .game-active footer {
+        display: none !important;
+    }
+
+    /* Optimización para pantallas grandes (PC) */
+    @media (min-width: 1024px) {
+        .start-screen {
+            min-height: 30vh;
+            padding: 60px 20px;
+        }
+        
+        .start-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .start-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 25px;
+        }
+        
+        .start-content p {
+            font-size: 1.3rem;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+        
+        .start-buttons {
+            gap: 30px;
+        }
+        
+        .start-button, .instructions-button {
+            padding: 18px 35px;
+            font-size: 1.3rem;
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .game-container {
+            max-width: 95%;
+            padding: 15px;
+            margin: 5px auto;
+        }
+
+        .game-title {
+            font-size: 2rem;
+        }
+
+        .cards-board.easy {
+            max-width: 250px;
+            gap: 8px;
+        }
+
+        .cards-board.medium {
+            max-width: 320px;
+            gap: 8px;
+        }
+
+        .cards-board.hard {
+            max-width: 400px;
+            gap: 6px;
+        }
+
+        .card-face {
+            font-size: 2rem;
+        }
+
+        .card-back {
+            font-size: 1.2rem;
+        }
+
+        .level-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 10px auto;
+            display: block !important;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+
+        .completion-modal-content {
+            padding: 25px;
+            max-width: 95%;
+        }
+
+        .completion-modal-content h3 {
+            font-size: 2rem;
+        }
+
+        .completion-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .completion-btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .cards-board.easy {
+            max-width: 200px;
+            gap: 6px;
+        }
+
+        .cards-board.medium {
+            max-width: 260px;
+            gap: 6px;
+        }
+
+        .cards-board.hard {
+            max-width: 320px;
+            gap: 5px;
+        }
+
+        .card-face {
+            font-size: 1.5rem;
+        }
+
+        .card-back {
+            font-size: 1rem;
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+        }
+
+        .control-btn.reset {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">🧠💝 Memoria de Cartas</h1>
+        <p class="game-instructions">
+            ¡Encuentra todos los pares de cartas iguales!<br>
+            <small>💡 Tip: Usa tu memoria para recordar dónde están las cartas</small>
+        </p>
+    </div>
+
+    <!-- Modal de completado -->
+    <div id="completion-modal" class="completion-modal">
+        <div class="completion-modal-content">
+            <h3>🏆 ¡FELICITACIONES!</h3>
+            <div class="completion-message">
+                <p>¡Has encontrado todos los pares!</p>
+                <div class="final-stats" id="final-stats">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+            <div class="completion-buttons">
+                <button id="play-again-btn" class="completion-btn play-again">
+                    🔄 Jugar de Nuevo
+                </button>
+                <button id="go-home-btn" class="completion-btn go-home">
+                    🏠 Volver al Inicio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div class="start-screen">
+        <div class="start-content">
+            <h2>🎮 ¡Bienvenido al Juego de Memoria!</h2>
+            <p>Encuentra todos los pares de cartas iguales</p>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-button">
+                    🚀 Comenzar Juego
+                </button>
+                <button id="instructions-btn" class="instructions-button">
+                    📖 Instrucciones
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="instructions-modal">
+        <div class="instructions-content">
+            <div class="instructions-header">
+                <h3>📖 ¿Cómo Jugar?</h3>
+                <button id="close-instructions" class="close-btn">✖</button>
+            </div>
+            
+            <div class="instructions-body">
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>🎯 Objetivo del Juego</h4>
+                        <p>Encuentra todos los pares de cartas iguales volteándolas de dos en dos.</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>🃏 Cómo Jugar</h4>
+                        <p>Haz clic en una carta para voltearla, luego haz clic en otra. Si son iguales, se quedan volteadas. Si no, se voltean de nuevo.</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>🧠 Estrategia</h4>
+                        <p>Usa tu memoria para recordar dónde viste cada emoji. ¡Mientras menos intentos uses, mejor será tu puntuación!</p>
+                    </div>
+                </div>
+
+                <div class="instruction-step">
+                    <div class="step-number">4</div>
+                    <div class="step-text">
+                        <h4>🎚️ Niveles de Dificultad</h4>
+                        <p>Elige entre Fácil (6 cartas), Medio (12 cartas) o Difícil (20 cartas).</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions-footer">
+                <button id="start-from-instructions" class="start-button">
+                    🎮 ¡Entendido, Empezar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de Nivel -->
+    <div class="level-indicator">
+        🎯 Dificultad: <span class="difficulty-value">Fácil</span>
+    </div>
+    
+    <!-- Elementos del juego -->
+    <div class="game-elements">
+        <!-- Selector de dificultad -->
+        <div class="difficulty-selector">
+            <h3>Elige tu nivel de dificultad:</h3>
+            <div class="difficulty-buttons">
+                <button class="difficulty-btn active" data-difficulty="easy">
+                    😊 Fácil (6 cartas)
+                </button>
+                <button class="difficulty-btn" data-difficulty="medium">
+                    😐 Medio (12 cartas)
+                </button>
+                <button class="difficulty-btn" data-difficulty="hard">
+                    😤 Difícil (20 cartas)
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas del juego -->
+        <div class="game-stats">
+            <div class="stat-item">
+                <div class="stat-label">⏱️ Tiempo</div>
+                <div class="stat-value" id="timer">00:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">🔄 Intentos</div>
+                <div class="stat-value" id="attempts">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">✅ Pares</div>
+                <div class="stat-value" id="pairs">0/<span id="total-pairs">3</span></div>
+            </div>
+        </div>
+        
+        <!-- Tablero de cartas -->
+        <div id="cards-board" class="cards-board easy">
+            <!-- Las cartas se generan dinámicamente -->
+        </div>
+        
+        <!-- Controles -->
+        <div class="game-controls">
+            <button id="new-game-btn" class="control-btn">
+                🎮 Nuevo Juego
+            </button>
+            <button id="reset-game-btn" class="control-btn reset">
+                🔄
+            </button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+    </div>
+</div>
+
+<script>
+class MemoryGame {
+    constructor() {
+        this.difficulty = 'easy';
+        this.cards = [];
+        this.flippedCards = [];
+        this.matchedPairs = 0;
+        this.attempts = 0;
+        this.startTime = null;
+        this.timer = null;
+        this.gameStarted = false;
+        this.canFlip = true;
+        this.audioContext = null;
+        this.gameAudio = {};
+        
+        // Emojis para las cartas
+        this.emojis = [
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐸',
+            '🐯', '🦁', '🐮', '🐷', '🐙', '🐠', '🐝', '🦋', '🌸', '🌺',
+            '🍎', '🍊', '🍋', '🍌', '🍇', '🍓', '🍒', '🍑', '🥝', '🍍',
+            '⚽', '🏀', '🏈', '🎾', '🏐', '🏓', '🥎', '🏸', '🏑', '🏒'
+        ];
+        
+        this.difficultySettings = {
+            easy: { pairs: 3, cards: 6 },
+            medium: { pairs: 6, cards: 12 },
+            hard: { pairs: 10, cards: 20 }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.initAudioContext();
+        this.setupGameAudio();
+        this.setupEventListeners();
+        this.setupStartScreen();
+        this.hideGameElements();
+    }
+
+    hideGameElements() {
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+    }
+
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Audio Context no disponible:', e);
+            this.audioContext = null;
+        }
+    }
+
+    setupGameAudio() {
+        const gameAudioFiles = {
+            correct: 'correcto',
+            incorrect: 'incorrecto', 
+            start: 'vamos_a_jugar',
+            complete: 'juego_completado'
+        };
+
+        Object.keys(gameAudioFiles).forEach(key => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.8;
+            
+            const audioFile = gameAudioFiles[key];
+            const formats = ['mp3', 'wav', 'ogg'];
+            
+            for (const format of formats) {
+                try {
+                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    this.gameAudio[key] = audio;
+                    break;
+                } catch (e) {
+                    console.log(`No se pudo cargar ${audioFile}.${format}`);
+                }
+            }
+            
+            if (!this.gameAudio[key]) {
+                this.gameAudio[key] = null;
+            }
+        });
+    }
+
+    playGameSound(soundType) {
+        const audio = this.gameAudio[soundType];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(console.log);
+        } else {
+            this.createSyntheticGameSound(soundType);
+        }
+    }
+
+    createSyntheticGameSound(soundType) {
+        if (!this.audioContext) return;
+
+        const frequencies = {
+            correct: [523, 659, 784, 1047],
+            incorrect: [200, 150, 100],
+            start: [261.63, 329.63, 392.00, 523.25],
+            complete: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]
+        };
+
+        const freq = frequencies[soundType] || [440];
+        
+        freq.forEach((f, i) => {
+            setTimeout(() => {
+                this.createSyntheticSound(f, 0.3);
+            }, i * 150);
+        });
+    }
+
+    createSyntheticSound(frequency = 440, duration = 0.3) {
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    setupEventListeners() {
+        // Botones de dificultad
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.difficulty = e.target.dataset.difficulty;
+                this.updateDifficultyDisplay();
+                this.createBoard();
+            });
+        });
+
+        // Botones de control
+        document.getElementById('new-game-btn').addEventListener('click', () => {
+            this.startNewGame();
+        });
+
+        document.getElementById('reset-game-btn').addEventListener('click', () => {
+            this.resetGame();
+        });
+
+        // Botones del modal de completado
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            this.playAgain();
+        });
+
+        document.getElementById('go-home-btn').addEventListener('click', () => {
+            this.goToHome();
+        });
+
+        // Instrucciones
+        document.getElementById('instructions-btn').addEventListener('click', () => {
+            this.showInstructions();
+        });
+
+        document.getElementById('close-instructions').addEventListener('click', () => {
+            this.hideInstructions();
+        });
+
+        document.getElementById('instructions-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'instructions-modal') {
+                this.hideInstructions();
+            }
+        });
+
+        document.getElementById('start-from-instructions').addEventListener('click', () => {
+            this.hideInstructions();
+            setTimeout(() => this.startGame(), 300);
+        });
+    }
+
+    setupStartScreen() {
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            this.startGame();
+        });
+    }
+
+    showInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    hideInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    startGame() {
+        document.body.classList.add('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const resetButton = document.getElementById('reset-game-btn');
+        
+        if (startScreen) startScreen.style.display = 'none';
+        if (gameElements) gameElements.style.display = 'block';
+        if (levelIndicator) levelIndicator.style.display = 'block';
+        if (resetButton) resetButton.classList.add('show');
+
+        this.playGameSound('start');
+        this.createBoard();
+        this.updateDifficultyDisplay();
+    }
+
+    updateDifficultyDisplay() {
+        const difficultyValue = document.querySelector('.difficulty-value');
+        const difficultyNames = {
+            easy: 'Fácil',
+            medium: 'Medio', 
+            hard: 'Difícil'
+        };
+        if (difficultyValue) {
+            difficultyValue.textContent = difficultyNames[this.difficulty];
+        }
+    }
+
+    createBoard() {
+        const board = document.getElementById('cards-board');
+        const settings = this.difficultySettings[this.difficulty];
+        
+        // Cambiar clase del tablero
+        board.className = `cards-board ${this.difficulty}`;
+        
+        // Seleccionar emojis aleatorios
+        const selectedEmojis = this.getRandomEmojis(settings.pairs);
+        
+        // Crear pares y mezclar
+        this.cards = [...selectedEmojis, ...selectedEmojis];
+        this.shuffleArray(this.cards);
+        
+        // Limpiar tablero
+        board.innerHTML = '';
+        
+        // Crear cartas
+        this.cards.forEach((emoji, index) => {
+            const card = this.createCard(emoji, index);
+            board.appendChild(card);
+        });
+        
+        // Actualizar UI
+        document.getElementById('total-pairs').textContent = settings.pairs;
+        this.resetStats();
+    }
+
+    getRandomEmojis(count) {
+        const shuffled = [...this.emojis].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, count);
+    }
+
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    createCard(emoji, index) {
+        const card = document.createElement('div');
+        card.className = 'memory-card';
+        card.dataset.index = index;
+        card.dataset.emoji = emoji;
+        
+        card.innerHTML = `
+            <div class="card-face card-back">❓</div>
+            <div class="card-face card-front">${emoji}</div>
+        `;
+        
+        card.addEventListener('click', () => this.flipCard(card));
+        
+        return card;
+    }
+
+    flipCard(card) {
+        if (!this.canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) {
+            return;
+        }
+
+        if (!this.gameStarted) {
+            this.startTimer();
+            this.gameStarted = true;
+        }
+
+        card.classList.add('flipped');
+        this.flippedCards.push(card);
+
+        if (this.flippedCards.length === 2) {
+            this.canFlip = false;
+            this.attempts++;
+            this.updateAttempts();
+            
+            setTimeout(() => {
+                this.checkMatch();
+            }, 1000);
+        }
+    }
+
+    checkMatch() {
+        const [card1, card2] = this.flippedCards;
+        const emoji1 = card1.dataset.emoji;
+        const emoji2 = card2.dataset.emoji;
+
+        if (emoji1 === emoji2) {
+            // ¡Par encontrado!
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            this.matchedPairs++;
+            this.updatePairs();
+            this.playGameSound('correct');
+            this.showFeedback('🎉 ¡Par encontrado!', 'success');
+            
+            if (this.matchedPairs === this.difficultySettings[this.difficulty].pairs) {
+                this.completeGame();
+            }
+        } else {
+            // No coinciden
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            this.playGameSound('incorrect');
+            this.showFeedback('❌ ¡Inténtalo de nuevo!', 'error');
+        }
+
+        this.flippedCards = [];
+        this.canFlip = true;
+    }
+
+    startTimer() {
+        this.startTime = Date.now();
+        this.timer = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const seconds = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    resetStats() {
+        this.matchedPairs = 0;
+        this.attempts = 0;
+        this.flippedCards = [];
+        this.gameStarted = false;
+        this.canFlip = true;
+        
+        this.stopTimer();
+        document.getElementById('timer').textContent = '00:00';
+        document.getElementById('attempts').textContent = '0';
+        document.getElementById('pairs').textContent = '0';
+    }
+
+    updateAttempts() {
+        document.getElementById('attempts').textContent = this.attempts;
+    }
+
+    updatePairs() {
+        document.getElementById('pairs').textContent = this.matchedPairs;
+    }
+
+    startNewGame() {
+        this.resetStats();
+        this.createBoard();
+        this.showFeedback('🎮 ¡Nuevo juego iniciado!', 'success');
+    }
+
+    resetGame() {
+        this.resetStats();
+        this.createBoard();
+        this.showFeedback('🔄 ¡Juego reiniciado!', 'success');
+    }
+
+    completeGame() {
+        this.stopTimer();
+        this.playGameSound('complete');
+        
+        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        
+        setTimeout(() => {
+            this.showCompletionModal(minutes, seconds);
+        }, 1000);
+    }
+
+    showCompletionModal(minutes, seconds) {
+        const modal = document.getElementById('completion-modal');
+        const finalStats = document.getElementById('final-stats');
+        
+        const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        const difficultyNames = {
+            easy: 'Fácil',
+            medium: 'Medio',
+            hard: 'Difícil'
+        };
+        
+        finalStats.innerHTML = `
+            <div style="display: flex; justify-content: space-around; text-align: center;">
+                <div>
+                    <div style="font-size: 1.2rem; font-weight: bold;">⏱️ Tiempo</div>
+                    <div style="font-size: 1.4rem;">${timeStr}</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.2rem; font-weight: bold;">🔄 Intentos</div>
+                    <div style="font-size: 1.4rem;">${this.attempts}</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.2rem; font-weight: bold;">🎚️ Dificultad</div>
+                    <div style="font-size: 1.4rem;">${difficultyNames[this.difficulty]}</div>
+                </div>
+            </div>
+        `;
+        
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    hideCompletionModal() {
+        const modal = document.getElementById('completion-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    playAgain() {
+        this.hideCompletionModal();
+        this.resetStats();
+        this.createBoard();
+        this.showFeedback('🔄 ¡Nuevo juego iniciado!', 'success');
+    }
+
+    goToHome() {
+        this.hideCompletionModal();
+        
+        document.body.classList.remove('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        
+        if (startScreen) startScreen.style.display = 'flex';
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        
+        this.resetStats();
+    }
+
+    showFeedback(message, type) {
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.classList.add('show');
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+    }
+}
+
+// Inicializar el juego cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    new MemoryGame();
+});
+</script>
+{% endblock %}

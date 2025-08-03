@@ -1,0 +1,229 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}🔧 Diagnóstico de Sonidos{% endblock %}
+
+{% block content %}
+<style>
+    .diagnostic-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 5px solid #FFE066;
+    }
+    
+    .test-section {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+        border: 3px solid #4ECDC4;
+    }
+    
+    .test-button {
+        background: linear-gradient(45deg, #6BCF7F, #4ECDC4);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        margin: 5px;
+        border-radius: 15px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    
+    .test-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    
+    .status {
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+    
+    .success { 
+        background: rgba(107, 207, 127, 0.3);
+        color: #2d5a3d;
+        border: 2px solid #6BCF7F;
+    }
+    
+    .error { 
+        background: rgba(255, 107, 157, 0.3);
+        color: #721c24;
+        border: 2px solid #FF6B9D;
+    }
+    
+    .info {
+        background: rgba(76, 205, 196, 0.3);
+        color: #2d5a5a;
+        border: 2px solid #4ECDC4;
+    }
+    
+    .file-list {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 10px 0;
+        border: 2px solid #dee2e6;
+    }
+    
+    pre {
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 15px;
+        border-radius: 10px;
+        overflow-x: auto;
+        font-size: 14px;
+    }
+</style>
+
+<div class="diagnostic-container">
+    <h1 style="text-align: center; color: #FF6B9D; font-family: 'Fredoka One', cursive; font-size: 2.5rem; margin-bottom: 30px;">
+        🔧 Diagnóstico de Sonidos
+    </h1>
+    
+    <div class="test-section">
+        <h3>📁 Información de Archivos</h3>
+        <div class="file-list">
+            <strong>Archivos requeridos en /static/sounds/:</strong><br>
+            ✅ perro.mp3 (para 🐶)<br>
+            ✅ gato.mp3 (para 🐱)<br>
+            ✅ vaca.mp3 (para 🐮)<br>
+            ✅ cerdo.mp3 (para 🐷)<br>
+            ❌ rana.mp3 (para 🐸) - FALTANTE<br>
+            ✅ pajaro.mp3 (para 🐦)
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🎵 Prueba Individual de Sonidos</h3>
+        <p>Haz clic para probar cada sonido:</p>
+        <button class="test-button" onclick="testSound('perro', '🐶')">🐶 Perro</button>
+        <button class="test-button" onclick="testSound('gato', '🐱')">🐱 Gato</button>
+        <button class="test-button" onclick="testSound('vaca', '🐮')">🐮 Vaca</button>
+        <button class="test-button" onclick="testSound('cerdo', '🐷')">🐷 Cerdo</button>
+        <button class="test-button" onclick="testSound('rana', '🐸')">🐸 Rana</button>
+        <button class="test-button" onclick="testSound('pajaro', '🐦')">🐦 Pájaro</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 Estado de Carga</h3>
+        <div id="status">Haz clic en un botón para probar...</div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🔍 Información Técnica</h3>
+        <div class="info">
+            <strong>URL Base:</strong> <span id="baseUrl">Cargando...</span><br>
+            <strong>STATIC_URL:</strong> {% static '' %}<br>
+            <strong>Ruta esperada:</strong> <span id="expectedPath">Cargando...</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>📝 Log de Diagnóstico</h3>
+        <pre id="debugLog">Esperando pruebas...</pre>
+    </div>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{% url 'juegos:secuencia_animales' %}" class="test-button" style="text-decoration: none; display: inline-block;">
+            🎮 Volver al Juego
+        </a>
+    </div>
+</div>
+
+<script>
+    let debugLog = [];
+    
+    function log(message) {
+        debugLog.push(`[${new Date().toLocaleTimeString()}] ${message}`);
+        document.getElementById('debugLog').textContent = debugLog.join('\n');
+        console.log(message);
+    }
+    
+    function updateStatus(message, type = 'info') {
+        document.getElementById('status').innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+    
+    function testSound(animal, emoji) {
+        log(`🔍 Iniciando prueba para: ${animal}`);
+        
+        const audio = new Audio();
+        const formats = ['mp3', 'wav', 'ogg'];
+        let currentFormat = 0;
+        let loaded = false;
+        
+        function tryNextFormat() {
+            if (currentFormat >= formats.length) {
+                updateStatus(`❌ ${emoji} ${animal}: No se pudo cargar ningún formato`, 'error');
+                log(`❌ Falló todos los formatos para: ${animal}`);
+                return;
+            }
+            
+            const format = formats[currentFormat];
+            const url = `/static/sounds/${animal}.${format}`;
+            
+            log(`🔄 Probando: ${url}`);
+            updateStatus(`🔄 ${emoji} Probando ${animal}.${format}...`, 'info');
+            
+            audio.src = url;
+            
+            const onLoad = () => {
+                if (!loaded) {
+                    loaded = true;
+                    updateStatus(`✅ ${emoji} ${animal}.${format} cargado y reproduciendo!`, 'success');
+                    log(`✅ Éxito: ${url}`);
+                    audio.play().catch(e => {
+                        log(`❌ Error al reproducir: ${e.message}`);
+                    });
+                    cleanup();
+                }
+            };
+            
+            const onError = (event) => {
+                log(`❌ Error cargando ${url}: ${event.type}`);
+                cleanup();
+                currentFormat++;
+                setTimeout(tryNextFormat, 100);
+            };
+            
+            const cleanup = () => {
+                audio.removeEventListener('canplaythrough', onLoad);
+                audio.removeEventListener('error', onError);
+                audio.removeEventListener('loadeddata', onLoad);
+            };
+            
+            audio.addEventListener('canplaythrough', onLoad);
+            audio.addEventListener('loadeddata', onLoad);
+            audio.addEventListener('error', onError);
+            
+            try {
+                audio.load();
+            } catch (e) {
+                log(`❌ Excepción al cargar: ${e.message}`);
+                onError({type: 'exception'});
+            }
+        }
+        
+        tryNextFormat();
+    }
+    
+    // Información técnica
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('baseUrl').textContent = window.location.origin;
+        document.getElementById('expectedPath').textContent = window.location.origin + '/static/sounds/[animal].mp3';
+        
+        log('🚀 Diagnóstico iniciado');
+        log(`🌐 URL base: ${window.location.origin}`);
+        log(`📁 Ruta static esperada: ${window.location.origin}/static/sounds/`);
+    });
+</script>
+{% endblock %}

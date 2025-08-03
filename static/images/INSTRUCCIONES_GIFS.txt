@@ -1,0 +1,42 @@
+📸 INSTRUCCIONES PARA GIFS DE JUEGOS
+=====================================
+
+🎯 Coloca los archivos GIF en esta carpeta con estos nombres EXACTOS:
+
+1. secuencia-animales.gif - GIF para el juego de secuencia de animales
+2. mundo-colores.gif - GIF para el juego de colores (próximamente)
+3. aventura-numerica.gif - GIF para el juego de números (próximamente)
+4. explorando-formas.gif - GIF para el juego de formas (próximamente)
+
+📐 ESPECIFICACIONES RECOMENDADAS:
+- Tamaño: 400x400 píxeles (cuadrado)
+- Formato: GIF animado
+- Duración: 2-5 segundos en loop
+- Peso: Máximo 2MB por archivo
+- Colores brillantes y llamativos para niños
+
+🎨 CONTENIDO SUGERIDO:
+- secuencia-animales.gif: Animales moviéndose o haciendo sonidos
+- mundo-colores.gif: Paleta de colores animada, pinceles pintando
+- aventura-numerica.gif: Números saltando o contando
+- explorando-formas.gif: Formas geométricas transformándose
+
+🌐 SITIOS PARA CONSEGUIR GIFS:
+- giphy.com (buscar y descargar)
+- tenor.com 
+- pixabay.com/gifs/
+- freepik.com (con cuenta gratuita)
+
+📝 CÓMO CREAR TUS PROPIOS GIFS:
+- Canva.com (plantillas animadas)
+- Adobe After Effects
+- Figma (con plugins de animación)
+- Online: ezgif.com, makeagif.com
+
+⚠️ NOTA IMPORTANTE:
+Si no colocas los GIFs, se mostrarán emojis como fallback automáticamente.
+El sistema está configurado para detectar si el archivo existe.
+
+✅ PARA VERIFICAR:
+Después de colocar los archivos, recarga la página principal
+y verifica que las imágenes se muestren correctamente.

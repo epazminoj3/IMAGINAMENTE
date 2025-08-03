@@ -1,0 +1,334 @@
+{% extends 'juegos/base.html' %}
+
+{% block title %}🌈 Imaginamente - Juegos Educativos 🌈{% endblock %}
+
+{% block content %}
+<style>
+    /* Estilos específicos para el home */
+    main {
+        min-height: calc(100vh - 300px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .welcome-section {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 5px solid #FFE066;
+        text-align: center;
+        max-width: 800px;
+        width: 100%;
+    }
+    
+    .welcome-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2rem, 6vw, 3.5rem);
+        background: linear-gradient(45deg, #FF6B9D, #4ECDC4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        animation: wiggle 2s ease-in-out infinite;
+    }
+    
+    .welcome-description {
+        font-size: clamp(1.1rem, 3vw, 1.5rem);
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+    
+    .games-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        width: 100%;
+        max-width: 1000px;
+        margin-top: 2rem;
+    }
+    
+    .game-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 25px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        transition: all 0.4s ease;
+        border: 4px solid transparent;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .game-card:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transition: left 0.5s;
+    }
+    
+    .game-card:hover:before {
+        left: 100%;
+    }
+    
+    .game-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 15px 50px rgba(0,0,0,0.25);
+        border-color: #FF6B9D;
+    }
+    
+    .game-icon {
+        font-size: clamp(4rem, 8vw, 6rem);
+        margin-bottom: 1rem;
+        display: block;
+        animation: float-icon 3s ease-in-out infinite;
+    }
+    
+    @keyframes float-icon {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .game-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(1.5rem, 4vw, 2rem);
+        color: #FF6B9D;
+        margin-bottom: 1rem;
+    }
+    
+    .game-description {
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        color: #666;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+    
+    .game-btn {
+        background: linear-gradient(45deg, #6BCF7F, #4ECDC4);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-size: clamp(1rem, 2.5vw, 1.2rem);
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: 3px solid white;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .game-btn:hover {
+        transform: scale(1.05) rotate(-2deg);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        background: linear-gradient(45deg, #FF6B9D, #FFE066);
+    }
+    
+    .game-image {
+        width: 100%;
+        height: 200px;
+        border-radius: 15px;
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(135deg, #FF6B9D, #4ECDC4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .game-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .game-card:hover .game-image img {
+        transform: scale(1.1);
+    }
+    
+    .placeholder {
+        font-size: 3rem;
+        color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    @keyframes wiggle {
+        0%, 7% { transform: rotateZ(0); }
+        15% { transform: rotateZ(-5deg); }
+        20% { transform: rotateZ(3deg); }
+        25% { transform: rotateZ(-3deg); }
+        30% { transform: rotateZ(2deg); }
+        35% { transform: rotateZ(-1deg); }
+        40%, 100% { transform: rotateZ(0); }
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-section {
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .games-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .game-card {
+            padding: 1.5rem;
+        }
+        
+        main {
+            padding: 1rem 0.5rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .welcome-section {
+            padding: 1rem;
+        }
+        
+        .game-card {
+            padding: 1rem;
+        }
+    }
+</style>
+
+<div class="welcome-section">
+    <h1 class="welcome-title">¡Bienvenidos a Imaginamente! 🎉</h1>
+    <p class="welcome-description">
+        Descubre juegos educativos diseñados especialmente para que los más pequeños aprendan mientras se divierten. 
+        ¡Cada juego es una nueva aventura llena de colores, sonidos y diversión! 🌈
+    </p>
+    <button class="play-button" onclick="scrollToGames()">
+        🎮 ¡EMPEZAR A JUGAR!
+    </button>
+</div>
+
+<div class="games-grid" id="games-section">
+    <!-- Juego de Secuencia de Memoria -->
+    <a href="{% url 'juegos:secuencia_animales' %}" class="game-card">
+        <div class="game-image">
+            <!-- Aquí puedes poner tu GIF -->
+            <img src="/static/images/secuencia_animales.png" alt="Secuencia de Animales" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵🐾</div>'">
+        </div>
+        <h2 class="game-title">Secuencia de Animales</h2>
+        <p class="game-description">
+            ¡Escucha los sonidos de los animales y arrastra las imágenes en el orden correcto! 
+            Desarrolla tu memoria y aprende sobre diferentes animales.
+        </p>
+        <button class="game-btn">🎮 JUGAR AHORA</button>
+    </a>
+    
+    <!-- Juego de Colores -->
+    <a href="{% url 'juegos:secuencia_colores' %}" class="game-card">
+        <div class="game-image">
+            <img src="/static/images/secuencia-colores.png" alt="Secuencia de Colores" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🎵</div>'">
+        </div>
+        <h2 class="game-title">Secuencia de Colores</h2>
+        <p class="game-description">
+            ¡Escucha los sonidos únicos de cada color y arrastra los colores en el orden correcto! 
+            Desarrolla tu memoria musical y aprende los colores.
+        </p>
+        <button class="game-btn">🎮 JUGAR AHORA</button>
+    </a>
+    
+    <!-- Juego de Eventos -->
+    <a href="{% url 'juegos:secuencia_eventos' %}" class="game-card">
+        <div class="game-image">
+            <img src="/static/images/secuencia-eventos.png" alt="Secuencia de Eventos" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>📚⏰</div>'">
+        </div>
+        <h2 class="game-title">Secuencia de Eventos</h2>
+        <p class="game-description">
+            ¡Aprende sobre procesos naturales y secuencias lógicas! Ordena los eventos en el orden correcto.
+        </p>
+        <button class="game-btn">🎮 JUGAR AHORA</button>
+    </a>
+    
+    <!-- Juego de Memoria de Cartas -->
+    <a href="{% url 'juegos:memoria_cartas' %}" class="game-card">
+        <div class="game-image">
+            <img src="/static/images/memoria-cartas.png" alt="Memoria de Cartas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧠💝</div>'">
+        </div>
+        <h2 class="game-title">Memoria de Cartas</h2>
+        <p class="game-description">
+            ¡Encuentra todos los pares de cartas iguales! Desarrolla tu memoria y concentración con emojis divertidos.
+        </p>
+        <button class="game-btn">🎮 JUGAR AHORA</button>
+    </a>
+    
+    <!-- Juego de Rompecabezas -->
+    <a href="{% url 'juegos:rompecabezas' %}" class="game-card">
+        <div class="game-image">
+            <img src="/static/images/rompecabezas.png" alt="Rompecabezas" onerror="this.parentElement.innerHTML='<div class=&quot;placeholder&quot;>🧩🖼️</div>'">
+        </div>
+        <h2 class="game-title">Rompecabezas</h2>
+        <p class="game-description">
+            ¡Arrastra las piezas para completar hermosas imágenes! Desarrolla la coordinación y el pensamiento espacial.
+        </p>
+        <button class="game-btn">🎮 JUGAR AHORA</button>
+    </a>
+</div>
+
+<script>
+    // Función para hacer scroll suave a los juegos
+    function scrollToGames() {
+        document.getElementById('games-section').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+
+    // Efectos interactivos para navegación y tarjetas de juegos
+    document.addEventListener('DOMContentLoaded', function() {
+        // Efectos para elementos interactivos
+        const interactiveElements = document.querySelectorAll('a, button, .game-card:not(.coming-soon)');
+        
+        interactiveElements.forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                if (!this.disabled && !this.classList.contains('coming-soon')) {
+                    if (this.classList.contains('game-card')) {
+                        this.style.transform = 'translateY(-10px) scale(1.02)';
+                    }
+                }
+            });
+            
+            element.addEventListener('mouseleave', function() {
+                if (!this.disabled && !this.classList.contains('coming-soon')) {
+                    if (this.classList.contains('game-card')) {
+                        this.style.transform = '';
+                    }
+                }
+            });
+        });
+        
+        // Efecto visual de clic en tarjetas
+        const gameCards = document.querySelectorAll('.game-card:not(.coming-soon)');
+        gameCards.forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+    });
+</script>
+{% endblock %}

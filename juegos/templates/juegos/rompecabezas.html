@@ -1,0 +1,2369 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}🧩🖼️ Rompecabezas - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        color: white;
+        font-family: 'Fredoka One', cursive;
+        min-height: 100vh;
+        position: relative;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-title {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        background: linear-gradient(45deg, #ff6b6b, #feca57);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .game-instructions {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Pantalla de Inicio */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 40vh;
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .start-content h2 {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        color: white;
+    }
+    
+    .start-content p {
+        font-size: 1.2rem;
+        margin-bottom: 30px;
+        color: rgba(255,255,255,0.9);
+    }
+    
+    .start-buttons {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .start-button, .instructions-button {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    .instructions-button {
+        background: linear-gradient(45deg, #3498db, #2980b9);
+    }
+    
+    .start-button:hover, .instructions-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Pantalla de Selección de Rompecabezas */
+    .puzzle-selection-screen {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: 2500;
+        overflow-y: auto;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .puzzle-selection-screen.show {
+        display: block;
+    }
+
+    .selection-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        color: white;
+        font-family: 'Fredoka One', cursive;
+    }
+
+    .selection-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .selection-header h2 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        background: linear-gradient(45deg, #ff6b6b, #feca57);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .selection-header p {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        color: rgba(255,255,255,0.9);
+    }
+
+    .selection-main {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        margin-bottom: 40px;
+        align-items: start;
+    }
+
+    .selection-section {
+        background: rgba(255,255,255,0.1);
+        border-radius: 20px;
+        padding: 30px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .selection-section h3 {
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        text-align: center;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .image-card {
+        background: rgba(255,255,255,0.1);
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 15px;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .image-card:hover, .image-card.selected {
+        border-color: #ff6b6b;
+        background: rgba(255,107,107,0.2);
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(255,107,107,0.3);
+    }
+
+    .image-preview {
+        width: 100%;
+        height: 0;
+        padding-bottom: 100%; /* Esto crea un cuadrado perfecto */
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .image-name {
+        font-size: 1rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .difficulty-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+
+    .difficulty-card {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 15px;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1rem;
+        text-align: center;
+        min-height: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .difficulty-card:hover, .difficulty-card.active {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(255,255,255,0.2);
+    }
+
+    .difficulty-card .emoji {
+        font-size: 1.5rem;
+        margin-bottom: 3px;
+    }
+
+    .selection-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 40px;
+        flex-wrap: wrap;
+    }
+
+    .selection-btn {
+        padding: 18px 40px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1.3rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        min-width: 200px;
+    }
+
+    .cancel-btn {
+        background: linear-gradient(45deg, #E74C3C, #C0392B);
+        color: white;
+    }
+
+    .cancel-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(231, 76, 60, 0.4);
+    }
+
+    .start-btn {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+        color: white;
+    }
+
+    .start-btn:hover:not(:disabled) {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    .start-btn:disabled {
+        background: rgba(150,150,150,0.5);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        opacity: 0.6;
+    }
+
+    /* Responsive Design para Pantalla de Selección */
+    @media (max-width: 768px) {
+        .selection-main {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .selection-container {
+            padding: 20px 15px;
+        }
+
+        .selection-header h2 {
+            font-size: 2rem;
+        }
+
+        .selection-section {
+            padding: 20px;
+        }
+
+        .image-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .image-preview {
+            padding-bottom: 100%; /* Mantiene proporción cuadrada */
+        }
+
+        .selection-buttons {
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .selection-btn {
+            min-width: 250px;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .selection-header h2 {
+            font-size: 1.8rem;
+        }
+
+        .selection-section h3 {
+            font-size: 1.5rem;
+        }
+
+        .image-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .image-preview {
+            padding-bottom: 100%; /* Mantiene proporción cuadrada */
+        }
+
+        .image-name {
+            font-size: 0.9rem;
+        }
+
+        .difficulty-card {
+            padding: 12px;
+            font-size: 0.9rem;
+            min-height: 50px;
+        }
+    }
+
+    .modal-image-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .modal-image-option {
+        background: rgba(255,255,255,0.1);
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 15px;
+        padding: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .modal-image-option:hover, .modal-image-option.selected {
+        border-color: #ff6b6b;
+        background: rgba(255,107,107,0.2);
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(255,107,107,0.3);
+    }
+
+    .modal-option-preview {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 8px;
+    }
+
+    .modal-option-name {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: white;
+    }
+
+    .modal-difficulty-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 30px;
+    }
+
+    .modal-difficulty-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 12px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1rem;
+        min-width: 120px;
+    }
+
+    .modal-difficulty-btn:hover, .modal-difficulty-btn.active {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+        transform: scale(1.05);
+    }
+
+    .confirm-selection-btn {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+        color: white;
+        border: none;
+        padding: 18px 45px; /* Aumentado padding */
+        border-radius: 25px;
+        font-size: 1.4rem; /* Aumentado font-size */
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        margin-top: 15px; /* Aumentado margen */
+    }
+
+    .confirm-selection-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    .confirm-selection-btn:disabled {
+        background: rgba(150,150,150,0.5);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Modal de Instrucciones */
+    .instructions-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .instructions-modal.show {
+        opacity: 1;
+    }
+
+    .instructions-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2rem;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        color: #333;
+        text-align: left;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+
+    .instructions-header h3 {
+        color: #9B59B6;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .close-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #9B59B6;
+    }
+
+    .step-number {
+        background: #9B59B6;
+        color: white;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .step-text h4 {
+        color: #2c3e50;
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .step-text p {
+        color: #5a6c7d;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .instructions-footer {
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+
+    /* Selector de imágenes */
+    .image-selector {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .image-selector h3 {
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    .image-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .image-option {
+        background: rgba(255,255,255,0.1);
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 15px;
+        padding: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .image-option:hover, .image-option.selected {
+        border-color: #ff6b6b;
+        background: rgba(255,107,107,0.2);
+        transform: scale(1.05);
+    }
+
+    .option-preview {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    .option-name {
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    /* Selector de dificultad */
+    .difficulty-selector {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .difficulty-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .difficulty-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: 2px solid rgba(255,255,255,0.3);
+        padding: 10px 20px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1rem;
+    }
+
+    .difficulty-btn:hover, .difficulty-btn.active {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+        transform: scale(1.05);
+    }
+
+    /* Indicador de progreso */
+    .level-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #9B59B6, #8E44AD);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+    /* Área del juego */
+    .game-elements {
+        display: none;
+    }
+
+    .game-area {
+        display: flex;
+        gap: 30px;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    /* Panel de piezas */
+    .pieces-panel {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        min-width: 200px;
+    }
+
+    .pieces-panel h3 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: white;
+    }
+
+    .pieces-container {
+        display: grid;
+        gap: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 5px;
+    }
+
+    /* Configuración de columnas por dificultad */
+    .pieces-container.easy {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pieces-container.medium {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .pieces-container.hard {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .puzzle-piece {
+        border-radius: 10px;
+        cursor: grab;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255,255,255,0.3);
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Tamaños dinámicos de piezas según dificultad */
+    .pieces-container.easy .puzzle-piece {
+        width: 116px;
+        height: 116px;
+    }
+
+    .pieces-container.medium .puzzle-piece {
+        width: 116px;
+        height: 116px;
+    }
+
+    .pieces-container.hard .puzzle-piece {
+        width: 96px;
+        height: 96px;
+    }
+
+    .puzzle-piece:hover {
+        transform: scale(1.1);
+        z-index: 10;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+
+    .puzzle-piece:active {
+        cursor: grabbing;
+    }
+
+    .puzzle-piece.dragging {
+        transform: scale(1.2);
+        z-index: 1000;
+        opacity: 0.8;
+    }
+
+    /* Tablero del rompecabezas */
+    .puzzle-board {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+    }
+
+    .puzzle-grid {
+        display: grid;
+        gap: 2px;
+        background: rgba(255,255,255,0.2);
+        padding: 10px;
+        border-radius: 10px;
+        position: relative;
+    }
+
+    .puzzle-grid.easy {
+        grid-template-columns: repeat(2, 1fr);
+        width: 240px;
+        height: 240px;
+    }
+
+    .puzzle-grid.medium {
+        grid-template-columns: repeat(3, 1fr);
+        width: 360px;
+        height: 360px;
+    }
+
+    .puzzle-grid.hard {
+        grid-template-columns: repeat(4, 1fr);
+        width: 400px;
+        height: 400px;
+    }
+
+    .puzzle-slot {
+        background: rgba(255,255,255,0.3);
+        border: 2px dashed rgba(255,255,255,0.5);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255,255,255,0.7);
+        font-size: 1.5rem;
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+
+    .puzzle-slot.drag-over {
+        border-color: #ff6b6b;
+        background: rgba(255,107,107,0.3);
+        transform: scale(1.05);
+    }
+
+    .puzzle-slot.filled {
+        border: 2px solid #2ECC71;
+        background: none;
+    }
+
+    .puzzle-slot.correct {
+        border-color: #2ECC71;
+        animation: correctPulse 0.6s ease-in-out;
+    }
+
+    .puzzle-slot.incorrect {
+        border-color: #E74C3C;
+        animation: shake 0.5s ease-in-out;
+        background: rgba(231, 76, 60, 0.3);
+    }
+
+    @keyframes correctPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    /* Imagen de referencia como indicador fijo */
+    .reference-indicator {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: linear-gradient(45deg, #9B59B6, #8E44AD);
+        color: white;
+        padding: 12px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        text-align: center;
+    }
+
+    .reference-indicator.show {
+        display: block;
+    }
+
+    .reference-indicator-title {
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .reference-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 2px solid rgba(255,255,255,0.3);
+        display: block;
+        margin: 0 auto;
+    }
+
+    /* Controles */
+    .game-controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+
+    .control-btn {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        font-family: 'Fredoka One', cursive;
+    }
+
+    .control-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+    }
+
+    .control-btn.reset {
+        background: linear-gradient(45deg, #E74C3C, #C0392B);
+        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        font-size: 1.5rem;
+        display: none;
+    }
+
+    .control-btn.reset.show {
+        display: block;
+    }
+
+    /* Feedback */
+    .feedback {
+        text-align: center;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 20px 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        display: none;
+    }
+
+    .feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+        display: block;
+    }
+
+    .feedback.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #196F3D;
+        border: 2px solid #2ECC71;
+    }
+
+    .feedback.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #922B21;
+        border: 2px solid #E74C3C;
+    }
+
+    /* Modal de completado */
+    .completion-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 3000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .completion-modal.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .completion-modal-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 25px;
+        padding: 40px;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        animation: completionSlideIn 0.5s ease;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+
+    @keyframes completionSlideIn {
+        from {
+            transform: scale(0.5) translateY(-50px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .completion-modal-content h3 {
+        color: white;
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        animation: celebrate 1s ease-in-out infinite;
+    }
+
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .completion-message {
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .completion-message p {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .completion-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .completion-btn {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-family: 'Fredoka One', cursive;
+        border: 2px solid rgba(255,255,255,0.3);
+        min-width: 180px;
+    }
+
+    .completion-btn.play-again {
+        background: linear-gradient(45deg, #27AE60, #2ECC71);
+    }
+
+    .completion-btn.go-home {
+        background: linear-gradient(45deg, #3498DB, #2980B9);
+    }
+
+    .completion-btn:hover {
+        transform: scale(1.05) translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    /* Ocultar footer durante el juego */
+    .game-active footer {
+        display: none !important;
+    }
+
+    /* Optimización para pantallas grandes (PC) */
+    @media (min-width: 1024px) {
+        .start-screen {
+            min-height: 30vh;
+            padding: 60px 20px;
+        }
+        
+        .start-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .start-content h2 {
+            font-size: 2.2rem;
+            margin-bottom: 25px;
+        }
+        
+        .start-content p {
+            font-size: 1.3rem;
+            margin-bottom: 35px;
+            line-height: 1.6;
+        }
+        
+        .start-buttons {
+            gap: 30px;
+        }
+        
+        .start-button, .instructions-button {
+            padding: 18px 35px;
+            font-size: 1.3rem;
+        }
+        
+        /* Asegurar layout horizontal en PC incluso para dificultad difícil */
+        .game-area {
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: nowrap; /* No permitir wrap en PC */
+        }
+        
+        .pieces-panel {
+            min-width: 200px;
+            max-width: 420px; /* Limitar ancho máximo */
+        }
+        
+        .pieces-container.hard {
+            grid-template-columns: repeat(4, 1fr);
+            max-height: 420px; /* Limitar altura para evitar scroll */
+            overflow-y: auto;
+        }
+        
+        .pieces-container.hard .puzzle-piece {
+            width: 96px;
+            height: 96px;
+        }
+        
+        .puzzle-board {
+            flex-shrink: 0; /* No permitir que se encoja */
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .game-container {
+            max-width: 95%;
+            padding: 15px;
+            margin: 5px auto;
+        }
+
+        .game-title {
+            font-size: 2rem;
+        }
+
+        .game-area {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .puzzle-grid.easy {
+            width: 200px;
+            height: 200px;
+        }
+
+        .puzzle-grid.medium {
+            width: 270px;
+            height: 270px;
+        }
+
+        .puzzle-grid.hard {
+            width: 280px;
+            height: 280px;
+        }
+
+        /* Optimización móvil para piezas - máximo 3 filas */
+        .pieces-container {
+            max-height: 120px; /* Más compacto para máximo 3 filas */
+            overflow-y: auto; /* Permitir scroll si es necesario */
+            gap: 3px;
+            padding: 5px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .pieces-container.easy {
+            grid-template-columns: repeat(2, 1fr); /* 2 columnas = 2 filas */
+        }
+
+        .pieces-container.medium {
+            grid-template-columns: repeat(3, 1fr); /* 3 columnas = 3 filas */
+        }
+
+        .pieces-container.hard {
+            grid-template-columns: repeat(4, 1fr); /* 4 columnas = 4 filas más compactas */
+        }
+
+        /* Piezas más pequeñas para móvil pero manteniendo proporción */
+        .pieces-container.easy .puzzle-piece {
+            width: 96px;  /* Proporcionalmente más pequeño para móvil */
+            height: 96px;
+        }
+
+        .pieces-container.medium .puzzle-piece {
+            width: 86px;  /* Ajustado para 3 columnas en móvil */
+            height: 86px;
+        }
+
+        .pieces-container.hard .puzzle-piece {
+            width: 76px;  /* Ajustado para 4 columnas en móvil */
+            height: 76px;
+        }
+
+        .reference-image {
+            width: 85px;
+            height: 85px;
+        }
+
+        /* Responsive para indicadores en móvil */
+        .level-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 10px auto;
+            display: block !important;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+
+        .reference-indicator {
+            position: relative;
+            bottom: auto;
+            left: auto;
+            margin: 10px auto;
+            display: block !important;
+            font-size: 0.8rem;
+            padding: 8px 12px;
+        }
+
+        .reference-indicator-title {
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+        }
+
+        .completion-modal-content {
+            padding: 25px;
+            max-width: 95%;
+        }
+
+        .completion-modal-content h3 {
+            font-size: 2rem;
+        }
+
+        .completion-buttons {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .completion-btn {
+            padding: 12px 20px;
+            font-size: 1rem;
+            min-width: 150px;
+        }
+
+        /* Modal de selección en móvil */
+        .puzzle-selection-content {
+            padding: 25px;
+            max-width: 95%;
+        }
+
+        .puzzle-selection-content h3 {
+            font-size: 1.8rem;
+        }
+
+        .selection-sections {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-image-options {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .modal-option-preview {
+            height: 60px;
+        }
+
+        .modal-difficulty-buttons {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-difficulty-btn {
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .confirm-selection-btn {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .puzzle-grid.easy {
+            width: 180px;
+            height: 180px;
+        }
+
+        .puzzle-grid.medium {
+            width: 240px;
+            height: 240px;
+        }
+
+        .puzzle-grid.hard {
+            width: 240px;
+            height: 240px;
+        }
+
+        /* Piezas aún más pequeñas en pantallas muy pequeñas - MÁXIMO 3 FILAS */
+        .pieces-container {
+            max-height: 90px; /* Muy compacto - máximo 3 filas */
+            gap: 2px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 3px;
+        }
+
+        /* Piezas aún más pequeñas en pantallas muy pequeñas pero manteniendo proporción */
+        .pieces-container.easy .puzzle-piece {
+            width: 86px;  /* Proporcionalmente más pequeño */
+            height: 86px;
+        }
+
+        .pieces-container.medium .puzzle-piece {
+            width: 76px;  /* Ajustado para 3 columnas */
+            height: 76px;
+        }
+
+        .pieces-container.hard .puzzle-piece {
+            width: 56px;  /* Más pequeño para que quepan mejor */
+            height: 56px;
+        }
+
+        .pieces-container.easy {
+            grid-template-columns: repeat(2, 1fr); /* 2 columnas = 2 filas */
+        }
+
+        .pieces-container.medium {
+            grid-template-columns: repeat(3, 1fr); /* 3 columnas = 3 filas */
+        }
+
+        .pieces-container.hard {
+            grid-template-columns: repeat(4, 1fr); /* 4 columnas = 4 filas máximo */
+        }
+
+        .reference-image {
+            width: 75px;
+            height: 75px;
+        }
+
+        .game-title {
+            font-size: 1.8rem;
+        }
+
+        .control-btn.reset {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+
+        /* Modal de selección en pantallas muy pequeñas */
+        .puzzle-selection-content {
+            padding: 20px;
+        }
+
+        .puzzle-selection-content h3 {
+            font-size: 1.5rem;
+        }
+
+        .modal-option-preview {
+            height: 50px;
+        }
+
+        .modal-option-name {
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">🧩🖼️ Rompecabezas</h1>
+        <p class="game-instructions">
+            ¡Arrastra las piezas para completar la imagen!<br>
+            <small>💡 Tip: Mira la imagen de referencia para guiarte</small>
+        </p>
+    </div>
+
+    <!-- Modal de completado -->
+    <div id="completion-modal" class="completion-modal">
+        <div class="completion-modal-content">
+            <h3>🏆 ¡FELICITACIONES!</h3>
+            <div class="completion-message">
+                <p>¡Has completado el rompecabezas!</p>
+                <div id="completion-image-display">
+                    <!-- Se mostrará la imagen completada -->
+                </div>
+            </div>
+            <div class="completion-buttons">
+                <button id="play-again-btn" class="completion-btn play-again">
+                    🔄 Jugar de Nuevo
+                </button>
+                <button id="go-home-btn" class="completion-btn go-home">
+                    🏠 Volver al Inicio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Selección de Rompecabezas -->
+    <div id="puzzle-selection-screen" class="puzzle-selection-screen">
+        <div class="selection-container">
+            <div class="selection-header">
+                <h2>🧩 ¡Elige tu Rompecabezas!</h2>
+                <p>Selecciona una imagen y la dificultad para comenzar</p>
+            </div>
+            
+            <div class="selection-main">
+                <div class="selection-section">
+                    <h3>🖼️ Selecciona una Imagen</h3>
+                    <div class="image-grid" id="image-grid">
+                        <!-- Se llenan dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="selection-section">
+                    <h3>🎚️ Elige la Dificultad</h3>
+                    <div class="difficulty-grid">
+                        <div class="difficulty-card active" data-difficulty="easy">
+                            <div class="emoji">😊</div>
+                            <div>Fácil</div>
+                            <small>(2x2 = 4 piezas)</small>
+                        </div>
+                        <div class="difficulty-card" data-difficulty="medium">
+                            <div class="emoji">😐</div>
+                            <div>Medio</div>
+                            <small>(3x3 = 9 piezas)</small>
+                        </div>
+                        <div class="difficulty-card" data-difficulty="hard">
+                            <div class="emoji">😤</div>
+                            <div>Difícil</div>
+                            <small>(4x4 = 16 piezas)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="selection-buttons">
+                <button id="cancel-selection-btn" class="selection-btn cancel-btn">
+                    ❌ Cancelar
+                </button>
+                <button id="start-puzzle-btn" class="selection-btn start-btn" disabled>
+                    🚀 ¡Empezar a Jugar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div class="start-screen">
+        <div class="start-content">
+            <h2>🎮 ¡Bienvenido al Rompecabezas!</h2>
+            <p>Completa las imágenes arrastrando las piezas</p>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-button">
+                    🚀 Comenzar Juego
+                </button>
+                <button id="instructions-btn" class="instructions-button">
+                    📖 Instrucciones
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="instructions-modal">
+        <div class="instructions-content">
+            <div class="instructions-header">
+                <h3>📖 ¿Cómo Jugar?</h3>
+                <button id="close-instructions" class="close-btn">✖</button>
+            </div>
+            
+            <div class="instructions-body">
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>🖼️ Selecciona una Imagen</h4>
+                        <p>Elige la imagen que quieres completar como rompecabezas.</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>🎚️ Elige la Dificultad</h4>
+                        <p>Selecciona entre Fácil (4 piezas), Medio (9 piezas) o Difícil (16 piezas).</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>🧩 Arrastra las Piezas</h4>
+                        <p>Toma las piezas del panel izquierdo y arrástralas a su posición correcta en el tablero.</p>
+                    </div>
+                </div>
+
+                <div class="instruction-step">
+                    <div class="step-number">4</div>
+                    <div class="step-text">
+                        <h4>🎯 Usa la Referencia</h4>
+                        <p>Mira la imagen completa en el panel derecho para saber dónde va cada pieza.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions-footer">
+                <button id="start-from-instructions" class="start-button">
+                    🎮 ¡Entendido, Empezar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de progreso -->
+    <div class="level-indicator">
+        🧩 Dificultad: <span class="difficulty-value">Fácil</span> | 
+        📝 Progreso: <span class="progress-value">0/4</span>
+    </div>
+
+    <!-- Indicador de referencia -->
+    <div class="reference-indicator">
+        <div class="reference-indicator-title">🖼️ Referencia</div>
+        <img id="reference-image" class="reference-image" src="" alt="Imagen de referencia">
+    </div>
+    
+    <!-- Elementos del juego -->
+    <div class="game-elements">
+        <!-- Área principal del juego -->
+        <div class="game-area">
+            <!-- Panel de piezas -->
+            <div class="pieces-panel">
+                <h3>🧩 Piezas</h3>
+                <div class="pieces-container" id="pieces-container">
+                    <!-- Se llenan dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Tablero del rompecabezas -->
+            <div class="puzzle-board">
+                <div id="puzzle-grid" class="puzzle-grid easy">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controles -->
+        <div class="game-controls">
+            <button id="new-puzzle-btn" class="control-btn">
+                🎮 Nuevo Rompecabezas
+            </button>
+            <button id="reset-puzzle-btn" class="control-btn reset">
+                🔄
+            </button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+    </div>
+</div>
+
+<script>
+// Definir la URL base para las imágenes usando Django
+const IMAGES_BASE_URL = "{% static 'images/rompecabezas/' %}";
+
+// Debug: mostrar la URL base
+console.log('IMAGES_BASE_URL:', IMAGES_BASE_URL);
+
+class PuzzleGame {
+    constructor() {
+        this.difficulty = 'easy';
+        this.selectedImage = null;
+        this.pieces = [];
+        this.correctPlacements = 0;
+        this.totalPieces = 4;
+        this.gameStarted = false;
+        this.audioContext = null;
+        this.gameAudio = {};
+        
+        // Configuración de imágenes disponibles
+        this.availableImages = [
+            { name: 'Gato', file: 'gato.jpg' },
+            { name: 'Perro', file: 'perro.jpg' },
+            { name: 'Pájaro', file: 'pájaro.jpg' },
+            { name: 'Mariposa', file: 'mariposa.jpg' },
+            { name: 'Flores', file: 'flores.jpg' },
+            { name: 'Paisaje', file: 'paisaje.jpg' }
+        ];
+        
+        this.difficultySettings = {
+            easy: { grid: 2, pieces: 4 },
+            medium: { grid: 3, pieces: 9 },
+            hard: { grid: 4, pieces: 16 }
+        };
+        
+        this.init();
+    }
+    
+    init() {
+        this.initAudioContext();
+        this.setupGameAudio();
+        this.setupEventListeners();
+        this.setupStartScreen();
+        this.createModalImageOptions();
+        this.hideGameElements();
+    }
+
+    hideGameElements() {
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const referenceIndicator = document.querySelector('.reference-indicator');
+        
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        if (referenceIndicator) referenceIndicator.classList.remove('show');
+    }
+
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Audio Context no disponible:', e);
+            this.audioContext = null;
+        }
+    }
+
+    setupGameAudio() {
+        const gameAudioFiles = {
+            correct: 'correcto',
+            incorrect: 'incorrecto', 
+            start: 'inicio',
+            complete: 'completado'
+        };
+
+        Object.keys(gameAudioFiles).forEach(key => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.8;
+            
+            const audioFile = gameAudioFiles[key];
+            const formats = ['mp3', 'wav', 'ogg'];
+            
+            for (const format of formats) {
+                try {
+                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    this.gameAudio[key] = audio;
+                    break;
+                } catch (e) {
+                    console.log(`No se pudo cargar ${audioFile}.${format}`);
+                }
+            }
+            
+            if (!this.gameAudio[key]) {
+                this.gameAudio[key] = null;
+            }
+        });
+    }
+
+    playGameSound(soundType) {
+        const audio = this.gameAudio[soundType];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(console.log);
+        } else {
+            this.createSyntheticGameSound(soundType);
+        }
+    }
+
+    createSyntheticGameSound(soundType) {
+        if (!this.audioContext) return;
+
+        const frequencies = {
+            correct: [523, 659, 784, 1047],
+            incorrect: [200, 150, 100],
+            start: [261.63, 329.63, 392.00, 523.25],
+            complete: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99]
+        };
+
+        const freq = frequencies[soundType] || [440];
+        
+        freq.forEach((f, i) => {
+            setTimeout(() => {
+                this.createSyntheticSound(f, 0.3);
+            }, i * 150);
+        });
+    }
+
+    createSyntheticSound(frequency = 440, duration = 0.3) {
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+
+    createModalImageOptions() {
+        const container = document.getElementById('image-grid');
+        container.innerHTML = '';
+        
+        this.availableImages.forEach((image, index) => {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            card.dataset.image = image.file;
+            
+            const imageUrl = `${IMAGES_BASE_URL}${image.file}`;
+            console.log('Imagen URL:', imageUrl);
+            
+            card.innerHTML = `
+                <div class="image-preview" style="background-image: url('${imageUrl}');"></div>
+                <div class="image-name">${image.name}</div>
+            `;
+            
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.image-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                this.selectedImage = image.file;
+                this.checkSelectionComplete();
+            });
+            
+            container.appendChild(card);
+        });
+    }
+
+    checkSelectionComplete() {
+        const startBtn = document.getElementById('start-puzzle-btn');
+        if (this.selectedImage && startBtn) {
+            startBtn.disabled = false;
+            startBtn.style.opacity = '1';
+        }
+    }
+
+    showPuzzleSelectionScreen() {
+        const screen = document.getElementById('puzzle-selection-screen');
+        const startScreen = document.querySelector('.start-screen');
+        
+        if (screen && startScreen) {
+            startScreen.style.display = 'none';
+            screen.classList.add('show');
+            
+            // Resetear selecciones
+            document.querySelectorAll('.image-card').forEach(card => card.classList.remove('selected'));
+            document.querySelectorAll('.difficulty-card').forEach(card => card.classList.remove('active'));
+            
+            const easyCard = document.querySelector('.difficulty-card[data-difficulty="easy"]');
+            if (easyCard) {
+                easyCard.classList.add('active');
+            }
+            
+            this.selectedImage = null;
+            this.difficulty = 'easy';
+            
+            const startBtn = document.getElementById('start-puzzle-btn');
+            if (startBtn) {
+                startBtn.disabled = true;
+                startBtn.style.opacity = '0.6';
+            }
+        }
+    }
+
+    hidePuzzleSelectionScreen() {
+        const screen = document.getElementById('puzzle-selection-screen');
+        const startScreen = document.querySelector('.start-screen');
+        
+        if (screen && startScreen) {
+            screen.classList.remove('show');
+            startScreen.style.display = 'flex';
+        }
+    }
+
+    updateReferenceImage() {
+        const referenceImg = document.getElementById('reference-image');
+        if (referenceImg && this.selectedImage) {
+            referenceImg.src = `${IMAGES_BASE_URL}${this.selectedImage}`;
+        }
+    }
+
+    setupEventListeners() {
+        // Botones de dificultad en la pantalla de selección
+        document.querySelectorAll('.difficulty-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                document.querySelectorAll('.difficulty-card').forEach(c => c.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                this.difficulty = e.currentTarget.dataset.difficulty;
+            });
+        });
+
+        // Botón de cancelar selección
+        document.getElementById('cancel-selection-btn').addEventListener('click', () => {
+            this.hidePuzzleSelectionScreen();
+        });
+
+        // Botón de empezar puzzle
+        document.getElementById('start-puzzle-btn').addEventListener('click', () => {
+            if (this.selectedImage) {
+                this.hidePuzzleSelectionScreen();
+                this.startGameWithSelection();
+            }
+        });
+
+        // Botones de control
+        document.getElementById('new-puzzle-btn').addEventListener('click', () => {
+            this.showPuzzleSelectionScreen();
+        });
+
+        document.getElementById('reset-puzzle-btn').addEventListener('click', () => {
+            this.resetPuzzle();
+        });
+
+        // Botones del modal de completado
+        document.getElementById('play-again-btn').addEventListener('click', () => {
+            this.playAgain();
+        });
+
+        document.getElementById('go-home-btn').addEventListener('click', () => {
+            this.goToHome();
+        });
+
+        // Instrucciones
+        document.getElementById('instructions-btn').addEventListener('click', () => {
+            this.showInstructions();
+        });
+
+        document.getElementById('close-instructions').addEventListener('click', () => {
+            this.hideInstructions();
+        });
+
+        document.getElementById('instructions-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'instructions-modal') {
+                this.hideInstructions();
+            }
+        });
+
+        document.getElementById('start-from-instructions').addEventListener('click', () => {
+            this.hideInstructions();
+            setTimeout(() => this.showPuzzleSelectionScreen(), 300);
+        });
+    }
+
+    setupStartScreen() {
+        const startBtn = document.getElementById('start-game-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                this.showPuzzleSelectionScreen();
+            });
+        }
+    }
+
+    startGameWithSelection() {
+        document.body.classList.add('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const referenceIndicator = document.querySelector('.reference-indicator');
+        const resetButton = document.getElementById('reset-puzzle-btn');
+        
+        if (startScreen) startScreen.style.display = 'none';
+        if (gameElements) gameElements.style.display = 'block';
+        if (levelIndicator) levelIndicator.style.display = 'block';
+        if (referenceIndicator) referenceIndicator.classList.add('show');
+        if (resetButton) resetButton.classList.add('show');
+
+        this.playGameSound('start');
+        this.updateReferenceImage();
+        this.updateDifficultyDisplay();
+        this.createPuzzle();
+    }
+
+    updateDifficultyDisplay() {
+        const difficultyValue = document.querySelector('.difficulty-value');
+        const difficultyNames = {
+            easy: 'Fácil',
+            medium: 'Medio', 
+            hard: 'Difícil'
+        };
+        if (difficultyValue) {
+            difficultyValue.textContent = difficultyNames[this.difficulty];
+        }
+        this.updateProgress();
+    }
+
+    updateProgress() {
+        const progressValue = document.querySelector('.progress-value');
+        if (progressValue) {
+            progressValue.textContent = `${this.correctPlacements}/${this.totalPieces}`;
+        }
+    }
+
+    createPuzzle() {
+        if (!this.selectedImage) {
+            this.showFeedback('⚠️ Selecciona una imagen primero', 'error');
+            return;
+        }
+
+        const settings = this.difficultySettings[this.difficulty];
+        this.totalPieces = settings.pieces;
+        this.correctPlacements = 0;
+        
+        this.createPuzzleGrid();
+        this.createPuzzlePieces();
+        this.updateProgress();
+        this.showFeedback(`🧩 ¡Nuevo rompecabezas creado! (${settings.grid}x${settings.grid})`, 'success');
+    }
+
+    showInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    hideInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    createPuzzle() {
+        if (!this.selectedImage) {
+            this.showFeedback('⚠️ Selecciona una imagen primero', 'error');
+            return;
+        }
+
+        const settings = this.difficultySettings[this.difficulty];
+        this.totalPieces = settings.pieces;
+        this.correctPlacements = 0;
+        
+        this.createPuzzleGrid();
+        this.createPuzzlePieces();
+        this.updateProgress();
+        this.showFeedback(`🧩 ¡Nuevo rompecabezas creado! (${settings.grid}x${settings.grid})`, 'success');
+    }
+
+    createPuzzleGrid() {
+        const grid = document.getElementById('puzzle-grid');
+        const settings = this.difficultySettings[this.difficulty];
+        
+        grid.className = `puzzle-grid ${this.difficulty}`;
+        grid.innerHTML = '';
+        
+        for (let i = 0; i < this.totalPieces; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'puzzle-slot';
+            slot.dataset.position = i;
+            slot.textContent = '🧩';
+            
+            // Eventos de drag and drop
+            slot.addEventListener('dragover', (e) => this.handleDragOver(e));
+            slot.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+            slot.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            slot.addEventListener('drop', (e) => this.handleDrop(e));
+            
+            grid.appendChild(slot);
+        }
+    }
+
+    createPuzzlePieces() {
+        const container = document.getElementById('pieces-container');
+        const settings = this.difficultySettings[this.difficulty];
+        
+        // Actualizar la clase del contenedor para responsive
+        container.className = `pieces-container ${this.difficulty}`;
+        container.innerHTML = '';
+        this.pieces = [];
+        
+        // Crear imagen temporal para dividir con Canvas
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            this.generatePuzzlePiecesFromImage(img, container, settings);
+        };
+        img.src = `${IMAGES_BASE_URL}${this.selectedImage}`;
+    }
+
+    generatePuzzlePiecesFromImage(img, container, settings) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calcular tamaño de cada pieza basado en la dificultad para que coincida con los slots
+        const gridSizes = {
+            easy: { pieceSize: 116 },    // 240px grid / 2 piezas - 8px gaps
+            medium: { pieceSize: 116 },  // 360px grid / 3 piezas - 4px gaps  
+            hard: { pieceSize: 116 }     // 480px grid / 4 piezas - 6px gaps
+        };
+        
+        const pieceSize = gridSizes[this.difficulty].pieceSize;
+        const pieceWidth = pieceSize;
+        const pieceHeight = pieceSize;
+        
+        // Configurar canvas para la imagen completa
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        
+        // Crear array de posiciones y mezclarlo
+        const positions = Array.from({length: this.totalPieces}, (_, i) => i);
+        this.shuffleArray(positions);
+        
+        positions.forEach((position, index) => {
+            const piece = document.createElement('div');
+            piece.className = 'puzzle-piece';
+            piece.dataset.correctPosition = position;
+            piece.draggable = true;
+            
+            // Calcular la posición de la pieza en la grilla
+            const row = Math.floor(position / settings.grid);
+            const col = position % settings.grid;
+            
+            // Calcular dimensiones de cada sección
+            const sectionWidth = img.width / settings.grid;
+            const sectionHeight = img.height / settings.grid;
+            
+            // Crear canvas para esta pieza específica con el tamaño correcto
+            const pieceCanvas = document.createElement('canvas');
+            const pieceCtx = pieceCanvas.getContext('2d');
+            pieceCanvas.width = pieceWidth;
+            pieceCanvas.height = pieceHeight;
+            
+            // Extraer la porción correcta de la imagen
+            pieceCtx.drawImage(
+                img,
+                col * sectionWidth, row * sectionHeight, sectionWidth, sectionHeight,
+                0, 0, pieceWidth, pieceHeight
+            );
+            
+            // Convertir canvas a imagen y asignar como background
+            const pieceDataURL = pieceCanvas.toDataURL();
+            piece.style.backgroundImage = `url(${pieceDataURL})`;
+            piece.style.backgroundSize = 'cover';
+            piece.style.backgroundPosition = 'center';
+            piece.style.backgroundRepeat = 'no-repeat';
+            
+            // Eventos de drag
+            piece.addEventListener('dragstart', (e) => this.handleDragStart(e));
+            piece.addEventListener('dragend', (e) => this.handleDragEnd(e));
+            
+            // Touch events para móviles
+            piece.addEventListener('touchstart', (e) => this.handleTouchStart(e));
+            piece.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+            piece.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            
+            container.appendChild(piece);
+            this.pieces.push(piece);
+        });
+    }
+
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.correctPosition);
+        e.target.classList.add('dragging');
+    }
+
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+
+    handleDragOver(e) {
+        e.preventDefault();
+    }
+
+    handleDragEnter(e) {
+        const slot = e.target.closest('.puzzle-slot');
+        if (slot && !slot.classList.contains('filled')) {
+            slot.classList.add('drag-over');
+        }
+    }
+
+    handleDragLeave(e) {
+        const slot = e.target.closest('.puzzle-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
+    }
+
+    handleDrop(e) {
+        e.preventDefault();
+        
+        const slot = e.target.closest('.puzzle-slot');
+        if (!slot || slot.classList.contains('filled')) return;
+        
+        const correctPosition = parseInt(e.dataTransfer.getData('text/plain'));
+        const slotPosition = parseInt(slot.dataset.position);
+        
+        slot.classList.remove('drag-over');
+        this.placePiece(correctPosition, slotPosition, slot);
+    }
+
+    // Touch events para móviles
+    handleTouchStart(e) {
+        const piece = e.target.closest('.puzzle-piece');
+        if (piece) {
+            this.touchStartElement = piece;
+            this.touchOffset = {
+                x: e.touches[0].clientX - piece.getBoundingClientRect().left,
+                y: e.touches[0].clientY - piece.getBoundingClientRect().top
+            };
+            e.preventDefault();
+        }
+    }
+
+    handleTouchMove(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.touches[0];
+        this.touchStartElement.style.position = 'fixed';
+        this.touchStartElement.style.zIndex = '1000';
+        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
+        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
+        this.touchStartElement.style.pointerEvents = 'none';
+        this.touchStartElement.classList.add('dragging');
+        
+        // Encontrar slot debajo del dedo
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.puzzle-slot') : null;
+        
+        // Remover highlight de todos los slots
+        document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Agregar highlight al slot actual
+        if (slot && !slot.classList.contains('filled')) {
+            slot.classList.add('drag-over');
+        }
+        
+        e.preventDefault();
+    }
+
+    handleTouchEnd(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.puzzle-slot') : null;
+        
+        // Restaurar elemento
+        this.touchStartElement.style.position = '';
+        this.touchStartElement.style.zIndex = '';
+        this.touchStartElement.style.left = '';
+        this.touchStartElement.style.top = '';
+        this.touchStartElement.style.pointerEvents = '';
+        this.touchStartElement.classList.remove('dragging');
+        
+        // Remover highlight
+        document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Procesar drop
+        if (slot && !slot.classList.contains('filled')) {
+            const correctPosition = parseInt(this.touchStartElement.dataset.correctPosition);
+            const slotPosition = parseInt(slot.dataset.position);
+            this.placePiece(correctPosition, slotPosition, slot);
+        }
+        
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        e.preventDefault();
+    }
+
+    placePiece(correctPosition, slotPosition, slot) {
+        const piece = this.pieces.find(p => parseInt(p.dataset.correctPosition) === correctPosition);
+        if (!piece) return;
+
+        if (correctPosition === slotPosition) {
+            // Posición correcta
+            slot.classList.add('filled', 'correct');
+            slot.textContent = '';
+            
+            // Crear pieza en el slot usando el mismo background que la pieza original
+            const slotPiece = document.createElement('div');
+            slotPiece.style.width = '100%';
+            slotPiece.style.height = '100%';
+            slotPiece.style.backgroundImage = piece.style.backgroundImage;
+            slotPiece.style.backgroundSize = 'cover';
+            slotPiece.style.backgroundPosition = 'center';
+            slotPiece.style.borderRadius = '6px';
+            slotPiece.style.backgroundRepeat = 'no-repeat';
+            slot.appendChild(slotPiece);
+            
+            // Remover pieza original
+            piece.remove();
+            this.correctPlacements++;
+            this.updateProgress();
+            
+            this.showFeedback('🎉 ¡Pieza correcta!', 'success');
+            
+            if (this.correctPlacements === this.totalPieces) {
+                this.completePuzzle();
+            }
+        } else {
+            // Posición incorrecta
+            slot.classList.add('incorrect');
+            this.showFeedback('❌ ¡Esa no es la posición correcta!', 'error');
+            
+            setTimeout(() => {
+                slot.classList.remove('incorrect');
+            }, 1000);
+        }
+    }
+
+    completePuzzle() {
+        this.showFeedback('🏆 ¡Rompecabezas completado!', 'success');
+        
+        setTimeout(() => {
+            this.showCompletionModal();
+        }, 1500);
+    }
+
+    showCompletionModal() {
+        const modal = document.getElementById('completion-modal');
+        const imageDisplay = document.getElementById('completion-image-display');
+        
+        imageDisplay.innerHTML = `
+            <img src="${IMAGES_BASE_URL}${this.selectedImage}" 
+                 style="width: 200px; height: 200px; object-fit: cover; border-radius: 15px; border: 3px solid white; margin: 15px 0;"
+                 alt="Imagen completada">
+        `;
+        
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    hideCompletionModal() {
+        const modal = document.getElementById('completion-modal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    playAgain() {
+        this.hideCompletionModal();
+        setTimeout(() => {
+            this.showPuzzleSelectionScreen();
+        }, 300);
+    }
+
+    goToHome() {
+        this.hideCompletionModal();
+        this.resetStats();
+        
+        document.body.classList.remove('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const referenceIndicator = document.querySelector('.reference-indicator');
+        const resetButton = document.getElementById('reset-puzzle-btn');
+        
+        if (startScreen) startScreen.style.display = 'flex';
+        if (gameElements) gameElements.style.display = 'none';
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        if (referenceIndicator) referenceIndicator.classList.remove('show');
+        if (resetButton) resetButton.classList.remove('show');
+        
+        this.resetStats();
+    }
+
+    resetPuzzle() {
+        this.createPuzzle();
+        this.showFeedback('🔄 ¡Rompecabezas reiniciado!', 'success');
+    }
+
+    resetStats() {
+        this.correctPlacements = 0;
+        this.gameStarted = false;
+        this.updateProgress();
+    }
+
+    showFeedback(message, type) {
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.className = `feedback ${type}`;
+            feedback.classList.add('show');
+            
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 3000);
+        }
+    }
+
+    // Métodos faltantes para completar la funcionalidad
+    handleDragEnter(e) {
+        const slot = e.target.closest('.puzzle-slot');
+        if (slot && !slot.classList.contains('filled')) {
+            slot.classList.add('drag-over');
+        }
+    }
+
+    handleDragLeave(e) {
+        const slot = e.target.closest('.puzzle-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
+    }
+
+    handleTouchStart(e) {
+        const piece = e.target.closest('.puzzle-piece');
+        if (piece) {
+            e.preventDefault();
+            this.touchStartElement = piece;
+            const rect = piece.getBoundingClientRect();
+            const touch = e.touches[0];
+            this.touchOffset = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+        }
+    }
+
+    handleTouchMove(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.touches[0];
+        this.touchStartElement.style.position = 'fixed';
+        this.touchStartElement.style.zIndex = '1000';
+        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
+        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
+        this.touchStartElement.style.pointerEvents = 'none';
+        this.touchStartElement.classList.add('dragging');
+        
+        e.preventDefault();
+    }
+
+    handleTouchEnd(e) {
+        if (!this.touchStartElement) return;
+        
+        // Restaurar estilo original
+        this.touchStartElement.style.position = '';
+        this.touchStartElement.style.zIndex = '';
+        this.touchStartElement.style.left = '';
+        this.touchStartElement.style.top = '';
+        this.touchStartElement.style.pointerEvents = '';
+        this.touchStartElement.classList.remove('dragging');
+        
+        // Encontrar slot debajo del dedo
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow?.closest('.puzzle-slot');
+        
+        // Procesar drop
+        if (slot && !slot.classList.contains('filled')) {
+            const correctPosition = parseInt(this.touchStartElement.dataset.correctPosition);
+            const slotPosition = parseInt(slot.dataset.position);
+            this.placePiece(correctPosition, slotPosition, slot);
+        }
+        
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        e.preventDefault();
+    }
+}
+
+// Inicializar el juego cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    new PuzzleGame();
+});
+</script>
+{% endblock %}

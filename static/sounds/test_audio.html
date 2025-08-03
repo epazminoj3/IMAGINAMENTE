@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Audio</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .audio-test { margin: 10px 0; }
+        button { margin: 5px; padding: 10px; }
+        .status { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Test de Archivos de Audio</h1>
+    
+    <h2>Sonidos de Animales</h2>
+    <div id="animales"></div>
+    
+    <h2>Sonidos de Colores</h2>
+    <div id="colores"></div>
+    
+    <h2>Sonidos del Juego</h2>
+    <div id="juego"></div>
+
+    <script>
+        const animales = ['perro', 'gato', 'vaca', 'cerdo', 'rana', 'pajaro'];
+        const colores = ['rojo', 'azul', 'amarillo', 'verde', 'morado', 'naranja'];
+        const juego = ['correcto', 'incorrecto', 'inicio_animales', 'inicio_colores', 'completado_animales', 'completado_colores', 'instrucciones_animales', 'instrucciones_colores'];
+
+        function testAudio(fileName, container) {
+            const div = document.createElement('div');
+            div.className = 'audio-test';
+            
+            const button = document.createElement('button');
+            button.textContent = `▶️ ${fileName}`;
+            
+            const status = document.createElement('span');
+            
+            const audio = new Audio(fileName + '.mp3');
+            
+            audio.addEventListener('canplaythrough', () => {
+                status.textContent = ' ✅ Cargado correctamente';
+                status.className = 'status';
+            });
+            
+            audio.addEventListener('error', (e) => {
+                status.textContent = ' ❌ Error al cargar';
+                status.className = 'error';
+                console.error('Error cargando audio:', fileName, e);
+            });
+            
+            button.onclick = () => {
+                audio.currentTime = 0;
+                audio.play().catch(e => {
+                    console.error('Error reproduciendo audio:', fileName, e);
+                    status.textContent = ' ❌ Error al reproducir';
+                    status.className = 'error';
+                });
+            };
+            
+            div.appendChild(button);
+            div.appendChild(status);
+            container.appendChild(div);
+        }
+
+        // Test animales
+        const animalesContainer = document.getElementById('animales');
+        animales.forEach(animal => testAudio(animal, animalesContainer));
+
+        // Test colores
+        const coloresContainer = document.getElementById('colores');
+        colores.forEach(color => testAudio(color, coloresContainer));
+
+        // Test juego
+        const juegoContainer = document.getElementById('juego');
+        juego.forEach(sound => testAudio(sound, juegoContainer));
+    </script>
+</body>
+</html>

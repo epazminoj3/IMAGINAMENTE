@@ -1,0 +1,2118 @@
+{% extends 'juegos/base.html' %}
+{% load static %}
+
+{% block title %}🌈🎵 Secuencia de Colores - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<style>
+    .game-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        border: 5px solid #FF6B9D;
+    }
+    
+    .game-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .game-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: clamp(2rem, 5vw, 3rem);
+        background: linear-gradient(45deg, #FF6B9D, #4ECDC4, #FFE066, #6BCF7F, #FF8E53, #9B59B6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+        /* animation: wiggle 2s ease-in-out infinite; */
+    }
+    
+    .game-instructions {
+        font-size: 1.2rem;
+        color: #333;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    /* Pantalla de Inicio */
+    .start-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(155, 89, 182, 0.1));
+        border-radius: 20px;
+        padding: 3rem;
+        text-align: center;
+        border: 3px solid #FF6B9D;
+    }
+    
+    .start-content h2 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 2.5rem;
+        color: #FF6B9D;
+        margin-bottom: 1rem;
+    }
+    
+    .start-content p {
+        font-size: 1.2rem;
+        color: #666;
+        margin-bottom: 2rem;
+    }
+    
+    .start-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .start-button, .instructions-button {
+        background: linear-gradient(45deg, #FF6B9D, #9B59B6);
+        color: white;
+        border: none;
+        padding: 1.2rem 2.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(255, 107, 157, 0.3);
+        font-family: 'Fredoka One', cursive;
+    }
+    
+    .instructions-button {
+        background: linear-gradient(45deg, #4ECDC4, #6BCF7F);
+        box-shadow: 0 5px 15px rgba(78, 205, 196, 0.3);
+    }
+    
+    .start-button:hover, .instructions-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    /* Modal de Instrucciones */
+    .instructions-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .instructions-modal.show {
+        opacity: 1;
+    }
+    
+    .instructions-content {
+        background: white;
+        border-radius: 20px;
+        padding: 2.5rem;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        transform: scale(0.7);
+        transition: transform 0.3s ease;
+    }
+    
+    .instructions-modal.show .instructions-content {
+        transform: scale(1);
+    }
+    
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1rem;
+    }
+    
+    .instructions-header h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.8rem;
+        color: #FF6B9D;
+        margin: 0;
+    }
+    
+    .close-btn {
+        background: #ff4757;
+        color: white;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .instruction-step {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+    }
+    
+    .step-number {
+        background: #FF6B9D;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .step-text h4 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+    
+    .step-text p {
+        margin: 0;
+        color: #666;
+    }
+    
+    .drag-demo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+    
+    .demo-color {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #FF6B9D, #4ECDC4);
+        transition: transform 0.5s ease;
+        cursor: pointer;
+        border: 3px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .demo-arrow {
+        font-size: 1.5rem;
+        color: #FF6B9D;
+    }
+    
+    .demo-slot {
+        width: 60px;
+        height: 60px;
+        border: 2px dashed #ccc;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .demo-slot.filled {
+        border-color: #FF6B9D;
+        background: rgba(255, 107, 157, 0.1);
+    }
+    
+    .instructions-footer {
+        text-align: center;
+        margin-top: 2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+    }
+    
+    /* Indicador de Nivel Compacto */
+    .level-indicator {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: linear-gradient(45deg, #FF6B9D, #9B59B6);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        display: none;
+        z-index: 100;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+    
+    /* Controles de secuencia */
+    .sequence-controls {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    /* Área del Juego */
+    .game-area {
+        display: none;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+    
+    .colors-section h3, .sequence-area h3 {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #FF6B9D;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .colors-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .color-item {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        cursor: grab;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        user-select: none;
+        min-height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        touch-action: none;
+    }
+    
+    .color-item:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        border-color: #FF6B9D;
+    }
+    
+    .color-item:active {
+        cursor: grabbing;
+        transform: scale(0.95);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .color-item.dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+
+    .color-item.selected {
+        border-color: #FFE066 !important;
+        border-width: 4px;
+        box-shadow: 0 0 20px rgba(255, 224, 102, 0.6);
+        transform: scale(1.1);
+    }
+
+    .color-item.playing {
+        border-width: 4px;
+        animation: pulse-glow 0.6s ease-in-out;
+    }
+
+    @keyframes pulse-glow {
+        0%, 100% { 
+            transform: scale(1);
+        }
+        50% { 
+            transform: scale(1.15);
+        }
+    }
+    
+    .color-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin-bottom: 8px;
+        border: 3px solid white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .color-name {
+        font-weight: 700;
+        color: #333;
+        font-size: 1rem;
+    }
+    
+    /* Colores específicos */
+    .color-item[data-color="rojo"] .color-circle { background: linear-gradient(135deg, #FF6B6B, #FF4757); }
+    .color-item[data-color="azul"] .color-circle { background: linear-gradient(135deg, #4ECDC4, #0984e3); }
+    .color-item[data-color="amarillo"] .color-circle { background: linear-gradient(135deg, #FFE066, #fdcb6e); }
+    .color-item[data-color="verde"] .color-circle { background: linear-gradient(135deg, #6BCF7F, #00b894); }
+    .color-item[data-color="morado"] .color-circle { background: linear-gradient(135deg, #9B59B6, #6c5ce7); }
+    .color-item[data-color="naranja"] .color-circle { background: linear-gradient(135deg, #FF8E53, #e17055); }
+    
+    .sequence-area {
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 20px;
+        padding: 20px;
+        border: 3px solid #FF6B9D;
+    }
+    
+    .sequence-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #666;
+        text-align: center;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+    
+    .sequence-title.correct {
+        color: #6BCF7F;
+        animation: celebrate 0.6s ease-in-out;
+    }
+    
+    .sequence-slots {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        min-height: 200px;
+    }
+    
+    .sequence-slot {
+        background: rgba(255, 255, 255, 0.5);
+        border: 3px dashed #ccc;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 120px;
+        position: relative;
+        cursor: pointer;
+        touch-action: none;
+    }
+    
+    .sequence-slot .slot-number {
+        pointer-events: none;
+        user-select: none;
+    }
+    
+    .sequence-slot.drag-over {
+        border-color: #FF6B9D !important;
+        background: rgba(255, 107, 157, 0.3) !important;
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(255, 107, 157, 0.5);
+    }
+
+    .sequence-slot.correct {
+        border-color: #6BCF7F !important;
+        background: rgba(107, 207, 127, 0.3) !important;
+        box-shadow: 0 0 20px rgba(107, 207, 127, 0.6);
+        animation: success-glow 0.8s ease-in-out;
+    }
+
+    .sequence-slot.error {
+        border-color: #FF6B9D !important;
+        background: rgba(255, 107, 157, 0.3) !important;
+        box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+        animation: error-shake 0.8s ease-in-out;
+    }
+
+    @keyframes success-glow {
+        0%, 100% { 
+            box-shadow: 0 0 20px rgba(107, 207, 127, 0.6);
+            transform: scale(1);
+        }
+        50% { 
+            box-shadow: 0 0 30px rgba(107, 207, 127, 0.9);
+            transform: scale(1.05);
+        }
+    }
+
+    @keyframes error-shake {
+        0%, 100% { 
+            transform: translateX(0);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.6);
+        }
+        25% { 
+            transform: translateX(-8px);
+            box-shadow: 0 0 25px rgba(255, 107, 157, 0.8);
+        }
+        75% { 
+            transform: translateX(8px);
+            box-shadow: 0 0 25px rgba(255, 107, 157, 0.8);
+        }
+    }
+    
+    .sequence-slot.incorrect {
+        border-color: #FF6B9D;
+        background: rgba(255, 107, 157, 0.2);
+        animation: shake 0.5s ease-in-out;
+    }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    
+    .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin: 20px 0;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        display: none;
+    }
+    
+    .control-btn.show {
+        display: inline-block;
+    }
+    
+    .control-btn.reset {
+        background: linear-gradient(45deg, #FF6B9D, #FF8E53);
+        box-shadow: 0 4px 15px rgba(255, 107, 157, 0.3);
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        font-size: 1.5rem;
+        display: none !important;
+    }
+    
+    .control-btn.reset.show {
+        display: block !important;
+    }
+    
+    .feedback {
+        text-align: center;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin: 20px 0;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+        display: none;
+        position: relative;
+        z-index: 10;
+    }
+    
+    .feedback.show {
+        opacity: 1;
+        transform: translateY(0);
+        display: block;
+    }
+    
+    .feedback.success {
+        background: rgba(107, 207, 127, 0.2);
+        color: #2d5a3d;
+        border: 2px solid #6BCF7F;
+    }
+    
+    .feedback.error {
+        background: rgba(255, 107, 157, 0.2);
+        color: #8B1538;
+        border: 2px solid #FF6B9D;
+    }
+
+    .feedback.info {
+        background: rgba(78, 205, 196, 0.2);
+        color: #2d5a4e;
+        border: 2px solid #4ECDC4;
+    }
+    
+    .sound-status {
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 15px;
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 2px solid #FF6B9D;
+    }
+    
+    .sound-status h4 {
+        margin: 0 0 10px 0;
+        color: #FF6B9D;
+        font-family: 'Fredoka One', cursive;
+    }
+    
+    .sound-indicators {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .sound-indicator {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+    
+    .sound-indicator.loaded {
+        background: rgba(107, 207, 127, 0.3);
+        color: #2d5a3d;
+        border: 2px solid #6BCF7F;
+    }
+    
+    .sound-indicator.fallback {
+        background: rgba(255, 230, 102, 0.3);
+        color: #8B6914;
+        border: 2px solid #FFE066;
+    }
+    
+    .score-board {
+        background: rgba(255, 107, 157, 0.2);
+        border: 3px solid #FF6B9D;
+        border-radius: 15px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .score {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.5rem;
+        color: #333;
+        margin: 5px 0;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    @keyframes wiggle {
+        0%, 7% { transform: rotateZ(0); }
+        15% { transform: rotateZ(-5deg); }
+        20% { transform: rotateZ(3deg); }
+        25% { transform: rotateZ(-3deg); }
+        30% { transform: rotateZ(2deg); }
+        35% { transform: rotateZ(-1deg); }
+        40%, 100% { transform: rotateZ(0); }
+    }
+    
+    @keyframes celebrate {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .celebrate {
+        animation: celebrate 0.6s ease-in-out 3;
+    }
+    
+    @keyframes rainbow {
+        0% { filter: hue-rotate(0deg); }
+        100% { filter: hue-rotate(360deg); }
+    }
+    
+    .rainbow-effect {
+        animation: rainbow 2s linear infinite;
+    }
+    
+    /* Ocultar footer durante el juego */
+    .game-active footer {
+        display: none !important;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .game-container {
+            max-width: 95%;
+            padding: 10px;
+            margin: 5px auto;
+        }
+        
+        .game-area {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .colors-section, .sequence-area {
+            padding: 0;
+        }
+        
+        .colors-section h3, .sequence-area h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .sequence-slots {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+        
+        .sequence-slot {
+            min-height: 80px;
+            padding: 8px;
+            aspect-ratio: 1;
+            border-width: 2px;
+            border-radius: 10px;
+        }
+        
+        .sequence-slot .color-circle {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .sequence-slot .color-name {
+            font-size: 0.7rem;
+        }
+        
+        .colors-container {
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 350px;
+            margin: 0 auto;
+            gap: 8px;
+        }
+        
+        .color-item {
+            padding: 8px;
+            min-height: 80px;
+            border-radius: 10px;
+            aspect-ratio: 1;
+        }
+        
+        .color-circle {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 4px;
+        }
+        
+        .color-name {
+            font-size: 0.7rem;
+        }
+        
+        .controls {
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+        }
+        
+        .compact-score {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 10px auto;
+            display: none !important;
+        }
+        
+        .level-indicator {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin: 5px auto;
+            display: block !important;
+            font-size: 0.9rem;
+            padding: 8px 15px;
+        }
+        
+        .repeat-button {
+            display: none !important;
+        }
+        
+        .instructions-content {
+            padding: 1.5rem;
+            max-width: 95%;
+            margin: 10px;
+        }
+        
+        .start-button, .instructions-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+        
+        .control-btn.reset {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            font-size: 1.2rem;
+        }
+        
+        .control-btn.reset.show {
+            display: block !important;
+        }
+        
+        .feedback {
+            font-size: 0.9rem;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        
+        .game-title {
+            font-size: 1.8rem;
+        }
+        
+        .game-instructions {
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .colors-container {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            max-width: 280px;
+        }
+        
+        .color-item {
+            padding: 6px;
+            min-height: 70px;
+            aspect-ratio: 1;
+        }
+        
+        .color-circle {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .color-name {
+            font-size: 0.65rem;
+        }
+        
+        .sequence-slots {
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            max-width: 280px;
+            gap: 6px;
+        }
+        
+        .sequence-slot {
+            min-height: 70px;
+            padding: 6px;
+            aspect-ratio: 1;
+        }
+        
+        .sequence-slot .color-circle {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .sequence-slot .color-name {
+            font-size: 0.6rem;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+        }
+        
+        .control-btn.reset {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+        }
+        
+        .control-btn.reset.show {
+            display: block !important;
+        }
+    }
+    
+    @media (min-width: 1200px) {
+        .game-container {
+            max-width: 1400px;
+        }
+        
+        .game-area {
+            gap: 40px;
+        }
+        
+        .colors-container {
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        }
+    }
+</style>
+
+<div class="game-container">
+    <div class="game-header">
+        <h1 class="game-title">🌈🎵 Secuencia de Colores</h1>
+        <p class="game-instructions">
+            ¡Escucha atentamente la secuencia de sonidos de colores y colócalos en el orden correcto!<br>
+            <small>🎮 Puedes <strong>hacer clic</strong> para seleccionar y luego <strong>hacer clic</strong> en un hueco, o directamente <strong>arrastrar</strong> los colores</small><br>
+            <small>💡 Tip: Haz clic en cualquier color para escuchar su sonido único</small>
+        </p>
+    </div>
+
+    <!-- Pantalla de Inicio -->
+    <div class="start-screen">
+        <div class="start-content">
+            <h2>🎮 ¡Bienvenido al Juego de Colores!</h2>
+            <p>Prepárate para un desafío colorido y musical increíble</p>
+            <div class="start-buttons">
+                <button id="start-game-btn" class="start-button">
+                    🚀 Comenzar Juego
+                </button>
+                <button id="instructions-btn" class="instructions-button">
+                    📖 Instrucciones
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Instrucciones -->
+    <div id="instructions-modal" class="instructions-modal">
+        <div class="instructions-content">
+            <div class="instructions-header">
+                <h3>📖 ¿Cómo Jugar?</h3>
+                <button id="close-instructions" class="close-btn">✖</button>
+            </div>
+            
+            <div class="instructions-body">
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>🎵 Escucha la Secuencia</h4>
+                        <p>Primero escucharás una secuencia de sonidos de colores únicos</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>🖱️ Arrastra los Colores</h4>
+                        <p>Arrastra los colores a las casillas en el orden que escuchaste</p>
+                    </div>
+                </div>
+
+                <div class="drag-demo">
+                    <div class="demo-color"></div>
+                    <div class="demo-arrow">➡️</div>
+                    <div class="demo-slot"></div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>✅ ¡Se Comprueba Automáticamente!</h4>
+                        <p>Cuando completes la secuencia, se verificará automáticamente</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="instructions-footer">
+                <button id="start-from-instructions" class="start-button">
+                    🎮 ¡Entendido, Empezar!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de Nivel Compacto (se muestra durante el juego) -->
+    <div class="level-indicator">
+        🎯 Nivel <span class="level-value">1</span>
+    </div>
+    
+    <!-- Elementos del juego ocultos inicialmente -->
+    <div class="game-elements" style="display: none;">
+        <!-- 
+        <div class="sound-status">
+            <h4>🔊 Estado de Sonidos de Colores</h4>
+            <div class="sound-indicators" id="soundIndicators">
+                Se llenarán dinámicamente
+            </div>
+        </div>
+        -->
+        
+        <div class="game-area">
+            <div class="colors-section">
+                <h3>🌈 Selecciona los Colores</h3>
+                <div class="colors-container" id="colorsContainer">
+                    <!-- Los colores se generarán dinámicamente -->
+                </div>
+            </div>
+            
+            <div class="sequence-area">
+                <h3 class="sequence-title" id="sequenceTitle">🎵 Secuencia</h3>
+                
+                <!-- Botón de reproducir antes de los slots -->
+                <div class="sequence-controls">
+                    <button id="playSequence" class="control-btn play">🔊 Reproducir Secuencia</button>
+                </div>
+                
+                <div class="sequence-slots" id="sequenceSlots">
+                    <!-- Los slots se generarán dinámicamente -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="resetGame" class="control-btn reset">🔄</button>
+        </div>
+        
+        <div id="feedback" class="feedback"></div>
+    </div>
+</div>
+
+<script>
+class ColorSequenceGame {
+    constructor() {
+        console.log('Iniciando constructor del juego de colores...');
+        this.colors = [
+            { name: 'Rojo', audioFile: 'rojo', frequency: 261.63, duration: 0.5, colorCode: '#FF6B6B' },
+            { name: 'Azul', audioFile: 'azul', frequency: 329.63, duration: 0.5, colorCode: '#4ECDC4' },
+            { name: 'Amarillo', audioFile: 'amarillo', frequency: 392.00, duration: 0.5, colorCode: '#FFE066' },
+            { name: 'Verde', audioFile: 'verde', frequency: 523.25, duration: 0.5, colorCode: '#6BCF7F' },
+            { name: 'Morado', audioFile: 'morado', frequency: 659.25, duration: 0.5, colorCode: '#9B59B6' },
+            { name: 'Naranja', audioFile: 'naranja', frequency: 783.99, duration: 0.5, colorCode: '#FF8E53' }
+        ];
+        
+        this.currentSequence = [];
+        this.userSequence = [];
+        this.score = 0;
+        this.level = 1;
+        this.isPlaying = false;
+        this.gameStarted = false;
+        this.gameState = 'waiting';
+        this.consecutiveCorrect = 0;
+        this.audioContext = null;
+        this.audioElements = {};
+        this.gameAudio = {};
+        this.instructionsAudio = null;
+        this.autoPlayTimeout = null;
+        this.feedbackTimeout = null;
+        this.selectedColor = null; // Para el modo híbrido
+        this.errorCount = 0; // Contador de errores consecutivos
+        this.lastErrorTime = 0; // Tiempo del último error
+        
+        console.log('Propiedades inicializadas, llamando a init()...');
+        this.init();
+        console.log('Constructor terminado');
+    }
+    
+    init() {
+        console.log('Ejecutando init()...');
+        
+        try {
+            console.log('1. Inicializando AudioContext...');
+            this.initAudioContext();
+            
+            console.log('2. Configurando audio del juego...');
+            this.setupGameAudio();
+            
+            console.log('3. Precargando archivos de audio...');
+            this.preloadAudioFiles();
+            
+            console.log('4. Creando colores...');
+            this.createColors();
+            
+            console.log('5. Creando slots de secuencia...');
+            this.createSequenceSlots();
+            
+            console.log('6. Configurando event listeners...');
+            this.setupEventListeners();
+            
+            console.log('7. Configurando instrucciones...');
+            this.setupInstructions();
+            
+            console.log('8. Configurando pantalla de inicio...');
+            this.setupStartScreen();
+            
+            console.log('9. Actualizando UI...');
+            this.updateUI();
+            
+            console.log('10. Ocultando elementos del juego...');
+            this.hideGameElements();
+            
+            console.log('Init() completado exitosamente');
+        } catch (error) {
+            console.error('Error en init():', error);
+        }
+    }
+
+    hideGameElements() {
+        const gameElements = document.querySelector('.game-elements');
+        const gameArea = document.querySelector('.game-area');
+        const controls = document.querySelector('.controls');
+        const feedback = document.getElementById('feedback');
+        const levelIndicator = document.querySelector('.level-indicator');
+        const resetButton = document.getElementById('resetGame');
+        
+        if (gameElements) gameElements.style.display = 'none';
+        if (gameArea) gameArea.style.display = 'none';
+        if (controls) controls.style.display = 'none';
+        if (feedback) {
+            feedback.style.display = 'none';
+            feedback.classList.remove('show');
+        }
+        if (levelIndicator) levelIndicator.style.display = 'none';
+        if (resetButton) resetButton.classList.remove('show');
+    }
+
+    setupGameAudio() {
+        // Sonidos del juego
+        const gameAudioFiles = {
+            correct: 'correcto',
+            incorrect: 'incorrecto',
+            start: 'inicio_colores',
+            complete: 'completado_colores',
+            instructions: 'instrucciones_colores'
+        };
+
+        Object.keys(gameAudioFiles).forEach(key => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.8;
+            
+            const audioFile = gameAudioFiles[key];
+            const formats = ['mp3', 'wav', 'ogg'];
+            
+            for (const format of formats) {
+                try {
+                    audio.src = `/static/sounds/${audioFile}.${format}`;
+                    this.gameAudio[key] = audio;
+                    break;
+                } catch (e) {
+                    console.log(`No se pudo cargar ${audioFile}.${format}`);
+                }
+            }
+            
+            if (!this.gameAudio[key]) {
+                console.log(`Usando sonido sintético para ${key}`);
+                this.gameAudio[key] = null;
+            }
+        });
+    }
+
+    setupInstructions() {
+        console.log('Configurando instrucciones...');
+        
+        const instructionsBtn = document.getElementById('instructions-btn');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const closeInstructions = document.getElementById('close-instructions');
+
+        console.log('instructionsBtn encontrado:', instructionsBtn);
+        console.log('instructionsModal encontrado:', instructionsModal);
+        console.log('closeInstructions encontrado:', closeInstructions);
+
+        if (instructionsBtn) {
+            instructionsBtn.addEventListener('click', () => {
+                this.showInstructions();
+            });
+        } else {
+            console.warn('Botón de instrucciones no encontrado');
+        }
+
+        if (closeInstructions) {
+            closeInstructions.addEventListener('click', () => {
+                this.stopAllAudio();
+                this.hideInstructions();
+            });
+        } else {
+            console.warn('Botón cerrar instrucciones no encontrado');
+        }
+
+        if (instructionsModal) {
+            instructionsModal.addEventListener('click', (e) => {
+                if (e.target === instructionsModal) {
+                    this.stopAllAudio();
+                    this.hideInstructions();
+                }
+            });
+        } else {
+            console.warn('Modal de instrucciones no encontrado');
+        }
+        
+    }
+
+    setupStartScreen() {
+        const startButton = document.getElementById('start-game-btn');
+        const startFromInstructions = document.getElementById('start-from-instructions');
+        
+        if (startButton) {
+            startButton.addEventListener('click', () => {
+                this.startGame();
+            });
+        }
+        
+        if (startFromInstructions) {
+            startFromInstructions.addEventListener('click', () => {
+                this.stopAllAudio();
+                this.hideInstructions();
+                setTimeout(() => this.startGame(), 300);
+            });
+        }
+    }
+
+    stopAllAudio() {
+        // Parar todos los audios del juego
+        Object.keys(this.gameAudio).forEach(key => {
+            const audio = this.gameAudio[key];
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        
+        // Parar todos los audios de colores
+        Object.keys(this.audioElements).forEach(key => {
+            const audio = this.audioElements[key];
+            if (audio && !audio.paused) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        
+        // Parar speech synthesis
+        if ('speechSynthesis' in window) {
+            speechSynthesis.cancel();
+        }
+        
+        // Resetear estado de reproducción
+        this.isPlaying = false;
+        clearTimeout(this.autoPlayTimeout);
+        if (this.feedbackTimeout) {
+            clearTimeout(this.feedbackTimeout);
+        }
+    }
+
+    showInstructions() {
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('show');
+                this.startDragAnimation();
+            }, 10);
+
+            this.playGameSound('instructions');
+        }
+    }
+
+    hideInstructions() {
+        this.stopAllAudio();
+        const modal = document.getElementById('instructions-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+    }
+
+    startDragAnimation() {
+        const demoColor = document.querySelector('.demo-color');
+        const demoSlot = document.querySelector('.demo-slot');
+
+        if (!demoColor || !demoSlot) return;
+
+        const animate = () => {
+            demoColor.style.transform = 'translate(0, 0)';
+            demoColor.style.opacity = '1';
+            demoColor.style.zIndex = '1';
+            demoSlot.classList.remove('filled');
+            demoSlot.innerHTML = '';
+
+            setTimeout(() => {
+                demoColor.style.transform = 'translate(120px, 0)';
+                demoColor.style.zIndex = '1000';
+            }, 1000);
+
+            setTimeout(() => {
+                demoSlot.classList.add('filled');
+                demoSlot.innerHTML = '<div class="demo-color" style="width: 40px; height: 40px; margin: 0;"></div>';
+                demoColor.style.opacity = '0';
+            }, 2500);
+
+            setTimeout(() => {
+                animate();
+            }, 4000);
+        };
+
+        animate();
+    }
+
+    startGame() {
+        this.gameStarted = true;
+        this.gameState = 'playing';
+        this.score = 0;
+        this.level = 1;
+        this.consecutiveCorrect = 0;
+        
+        // Agregar clase al body para ocultar footer
+        document.body.classList.add('game-active');
+        
+        const startScreen = document.querySelector('.start-screen');
+        if (startScreen) {
+            startScreen.style.display = 'none';
+        }
+
+        const gameElements = document.querySelector('.game-elements');
+        if (gameElements) {
+            gameElements.style.display = 'block';
+        }
+
+        const gameArea = document.querySelector('.game-area');
+        if (gameArea) {
+            gameArea.style.display = 'grid';
+        }
+
+        const levelIndicator = document.querySelector('.level-indicator');
+        if (levelIndicator) {
+            levelIndicator.style.display = 'block';
+        }
+
+        // Mostrar área de feedback
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            feedback.style.display = 'block';
+        }
+
+        // Mostrar botón de reproducir
+        const playButton = document.getElementById('playSequence');
+        if (playButton) {
+            playButton.classList.add('show');
+        }
+
+        // Mostrar botón de reiniciar
+        const resetButton = document.getElementById('resetGame');
+        if (resetButton) {
+            resetButton.classList.add('show');
+            console.log('Botón de reiniciar mostrado:', resetButton.classList.contains('show'));
+            console.log('Display del botón:', window.getComputedStyle(resetButton).display);
+        } else {
+            console.warn('Botón de reiniciar no encontrado');
+        }
+
+        this.playGameSound('start');
+        this.generateNewSequence();
+        this.updateUI();
+    }
+
+    playGameSound(soundType) {
+        const audio = this.gameAudio[soundType];
+        if (audio) {
+            audio.currentTime = 0;
+            audio.play().catch(console.log);
+        } else {
+            this.createSyntheticGameSound(soundType);
+        }
+    }
+
+    createSyntheticGameSound(soundType) {
+        if (!this.audioContext) return;
+
+        const frequencies = {
+            correct: [523, 659, 784, 1047],
+            incorrect: [200, 150, 100],
+            start: [261.63, 329.63, 392.00, 523.25],
+            complete: [261.63, 329.63, 392.00, 523.25, 659.25, 783.99],
+            instructions: [440, 493, 523]
+        };
+
+        const freq = frequencies[soundType] || [440];
+        
+        freq.forEach((f, i) => {
+            setTimeout(() => {
+                this.createSyntheticSound(null, f, 0.3);
+            }, i * 150);
+        });
+    }
+
+    createSyntheticSound(color, frequency = 440, duration = 0.3) {
+        if (!this.audioContext) return;
+
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime);
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, this.audioContext.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+        
+        oscillator.start(this.audioContext.currentTime);
+        oscillator.stop(this.audioContext.currentTime + duration);
+    }
+    
+    preloadAudioFiles() {
+        this.updateSoundIndicators();
+        
+        this.colors.forEach((color, index) => {
+            const audio = new Audio();
+            audio.preload = 'auto';
+            audio.volume = 0.7;
+            
+            const formats = ['mp3', 'wav', 'ogg'];
+            let loaded = false;
+            
+            const tryFormat = (formatIndex) => {
+                if (formatIndex >= formats.length || loaded) return;
+                
+                const format = formats[formatIndex];
+                const audioUrl = `/static/sounds/${color.audioFile}.${format}`;
+                
+                console.log(`🔍 Intentando cargar: ${audioUrl}`);
+                audio.src = audioUrl;
+                
+                const onLoad = () => {
+                    if (!loaded) {
+                        loaded = true;
+                        console.log(`✅ Sonido cargado exitosamente: ${color.name} (${format})`);
+                        this.updateSoundIndicator(index, true);
+                        audio.removeEventListener('canplaythrough', onLoad);
+                        audio.removeEventListener('error', onError);
+                    }
+                };
+                
+                const onError = (error) => {
+                    console.log(`❌ Error cargando: ${audioUrl}`, error);
+                    audio.removeEventListener('canplaythrough', onLoad);
+                    audio.removeEventListener('error', onError);
+                    
+                    setTimeout(() => tryFormat(formatIndex + 1), 100);
+                };
+                
+                audio.addEventListener('canplaythrough', onLoad);
+                audio.addEventListener('error', onError);
+                audio.load();
+            };
+            
+            tryFormat(0);
+            
+            setTimeout(() => {
+                if (!loaded) {
+                    console.log(`🔄 Timeout alcanzado para: ${color.name}, usando fallback sintético`);
+                    this.updateSoundIndicator(index, false);
+                }
+            }, 5000);
+            
+            this.audioElements[index] = audio;
+        });
+    }
+    
+    updateSoundIndicators() {
+        const container = document.getElementById('soundIndicators');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        this.colors.forEach((color, index) => {
+            const indicator = document.createElement('div');
+            indicator.className = 'sound-indicator fallback';
+            indicator.textContent = `🎨 ${color.name}: Cargando...`;
+            indicator.id = `indicator-${index}`;
+            container.appendChild(indicator);
+        });
+    }
+    
+    updateSoundIndicator(index, isLoaded) {
+        const indicator = document.getElementById(`indicator-${index}`);
+        if (indicator) {
+            const color = this.colors[index];
+            if (isLoaded) {
+                indicator.className = 'sound-indicator loaded';
+                indicator.textContent = `🎨 ${color.name}: ✅ Listo`;
+            } else {
+                indicator.className = 'sound-indicator fallback';
+                indicator.textContent = `🎨 ${color.name}: 🔄 Sintético`;
+            }
+        }
+    }
+    
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.warn('Audio Context no disponible:', e);
+            this.audioContext = null;
+        }
+    }
+    
+    playColorSound(colorIndex) {
+        const audio = this.audioElements[colorIndex];
+        const color = this.colors[colorIndex];
+        
+        if (audio && audio.readyState >= 2) {
+            audio.currentTime = 0;
+            audio.play().catch(e => {
+                console.log('Error reproduciendo audio:', e);
+                this.playSyntheticSound(colorIndex);
+            });
+        } else {
+            console.log(`🔄 Usando sonido sintético para: ${color.name}`);
+            this.playSyntheticSound(colorIndex);
+        }
+    }
+    
+    playSyntheticSound(colorIndex) {
+        if (!this.audioContext) {
+            this.playTextToSpeech(this.colors[colorIndex]);
+            return;
+        }
+        
+        const color = this.colors[colorIndex];
+        this.createSyntheticSound(color, color.frequency, color.duration);
+    }
+    
+    playTextToSpeech(color) {
+        if ('speechSynthesis' in window) {
+            const utterance = new SpeechSynthesisUtterance(`Color ${color.name}`);
+            utterance.rate = 1.2;
+            utterance.pitch = 1.2;
+            speechSynthesis.speak(utterance);
+        }
+    }
+    
+    createColors() {
+        const container = document.getElementById('colorsContainer');
+        container.innerHTML = '';
+        
+        this.colors.forEach((color, index) => {
+            const colorDiv = document.createElement('div');
+            colorDiv.className = 'color-item';
+            colorDiv.draggable = true;
+            colorDiv.dataset.colorIndex = index;
+            colorDiv.dataset.color = color.audioFile;
+            colorDiv.innerHTML = `
+                <div class="color-circle" style="background: ${color.colorCode}"></div>
+                <div class="color-name">${color.name}</div>
+            `;
+            
+            colorDiv.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Prevenir interacción si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    this.showFeedback('🎵 Espera a que termine la secuencia para seleccionar colores', 'info');
+                    return;
+                }
+                
+                // Si ya hay un color seleccionado, deseleccionarlo
+                if (this.selectedColor !== null) {
+                    const prevSelected = document.querySelector('.color-item.selected');
+                    if (prevSelected) {
+                        prevSelected.classList.remove('selected');
+                    }
+                }
+                
+                // Si es el mismo color, deseleccionar
+                if (this.selectedColor === index) {
+                    this.selectedColor = null;
+                    colorDiv.classList.remove('selected');
+                } else {
+                    // Seleccionar nuevo color
+                    this.selectedColor = index;
+                    colorDiv.classList.add('selected');
+                }
+                
+                // Reproducir sonido
+                this.playColorSound(index);
+            });
+            
+            colorDiv.addEventListener('dragstart', (e) => {
+                // Prevenir drag si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    e.preventDefault();
+                    this.showFeedback('🎵 Espera a que termine la secuencia para arrastrar colores', 'info');
+                    return;
+                }
+                this.handleDragStart(e);
+            });
+            colorDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
+            
+            // Touch events para dispositivos móviles
+            colorDiv.addEventListener('touchstart', (e) => {
+                // Prevenir touch si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    e.preventDefault();
+                    this.showFeedback('🎵 Espera a que termine la secuencia para tocar colores', 'info');
+                    return;
+                }
+                this.handleTouchStart(e);
+            });
+            colorDiv.addEventListener('touchmove', (e) => this.handleTouchMove(e));
+            colorDiv.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            
+            container.appendChild(colorDiv);
+        });
+    }
+    
+    createSequenceSlots() {
+        const container = document.getElementById('sequenceSlots');
+        container.innerHTML = '';
+        
+        // Dificultad ajustada: empezar con 3, máximo 8
+        const sequenceLength = Math.min(this.level + 2, 8);
+        this.userSequence = new Array(sequenceLength).fill(null);
+        
+        for (let i = 0; i < sequenceLength; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'sequence-slot';
+            slot.dataset.slotIndex = i;
+            slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; font-weight: bold;">${i + 1}</div>`;
+            
+            slot.addEventListener('dragover', (e) => this.handleDragOver(e));
+            slot.addEventListener('dragenter', (e) => this.handleDragEnter(e));
+            slot.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+            slot.addEventListener('drop', (e) => this.handleDrop(e));
+            
+            // Modo híbrido: permitir click en slots para colocar color seleccionado
+            slot.addEventListener('click', (e) => {
+                // Prevenir interacción con slots si se está reproduciendo la secuencia
+                if (this.isPlaying) {
+                    this.showFeedback('🎵 Espera a que termine la secuencia para colocar colores', 'info');
+                    return;
+                }
+                this.placeColorInSlot(i);
+            });
+            
+            container.appendChild(slot);
+        }
+    }
+    
+    setupEventListeners() {
+        const playButton = document.getElementById('playSequence');
+        if (playButton) {
+            playButton.addEventListener('click', () => {
+                this.playSequence();
+            });
+        }
+        
+        const resetButton = document.getElementById('resetGame');
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                this.resetGame();
+            });
+        }
+    }
+    
+    generateNewSequence() {
+        // Dificultad ajustada: empezar con 3, máximo 8
+        const sequenceLength = Math.min(this.level + 2, 8);
+        this.currentSequence = [];
+        this.errorCount = 0; // Resetear contador de errores para nueva secuencia
+        
+        for (let i = 0; i < sequenceLength; i++) {
+            const randomIndex = Math.floor(Math.random() * this.colors.length);
+            this.currentSequence.push(randomIndex);
+        }
+        
+        this.createSequenceSlots();
+        this.showFeedback('🌈 ¡Nueva secuencia de colores generada! Presiona el botón 🔊 para escucharla.', 'success');
+        
+        // Auto-play después de 2 segundos
+        clearTimeout(this.autoPlayTimeout);
+        this.autoPlayTimeout = setTimeout(() => {
+            if (this.gameState === 'playing' && !this.isPlaying) {
+                this.playSequence();
+            }
+        }, 3000);
+    }
+    
+    async playSequence() {
+        if (this.isPlaying) return;
+        
+        this.isPlaying = true;
+        this.showFeedback('🎵 Escuchando secuencia de colores... ¡Presta atención!', 'success');
+        
+        for (let i = 0; i < this.currentSequence.length; i++) {
+            const colorIndex = this.currentSequence[i];
+            
+            this.highlightColor(colorIndex);
+            this.playColorSound(colorIndex);
+            
+            await this.delay(1000);
+            
+            this.removeHighlight(colorIndex);
+            
+            if (i < this.currentSequence.length - 1) {
+                await this.delay(300);
+            }
+        }
+        
+        this.isPlaying = false;
+        this.showFeedback('✨ ¡Secuencia completada! Ahora arrastra los colores en el orden correcto.', 'success');
+    }
+    
+    highlightColor(colorIndex) {
+        const colorElements = document.querySelectorAll('.color-item');
+        if (colorElements[colorIndex]) {
+            const color = this.colors[colorIndex];
+            const element = colorElements[colorIndex];
+            
+            // Aplicar clase playing para animación
+            element.classList.add('playing');
+            
+            // Aplicar borde del color específico
+            element.style.borderColor = color.colorCode;
+            element.style.boxShadow = `0 0 25px ${this.hexToRgba(color.colorCode, 0.8)}`;
+        }
+    }
+    
+    removeHighlight(colorIndex) {
+        const colorElements = document.querySelectorAll('.color-item');
+        if (colorElements[colorIndex]) {
+            const element = colorElements[colorIndex];
+            element.classList.remove('playing');
+            element.style.borderColor = '';
+            element.style.boxShadow = '';
+        }
+    }
+
+    // Función auxiliar para convertir hex a rgba
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+    
+    handleTouchStart(e) {
+        const touch = e.touches[0];
+        const element = e.target.closest('.color-item');
+        if (element) {
+            element.classList.add('dragging');
+            this.touchStartElement = element;
+            this.touchOffset = {
+                x: touch.clientX - element.getBoundingClientRect().left,
+                y: touch.clientY - element.getBoundingClientRect().top
+            };
+        }
+        e.preventDefault();
+    }
+
+    handleTouchMove(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.touches[0];
+        this.touchStartElement.style.position = 'fixed';
+        this.touchStartElement.style.zIndex = '1000';
+        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
+        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
+        this.touchStartElement.style.pointerEvents = 'none';
+        
+        // Encontrar el slot debajo del dedo
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
+        
+        // Remover highlight de todos los slots
+        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Agregar highlight al slot actual
+        if (slot) {
+            slot.classList.add('drag-over');
+        }
+        
+        e.preventDefault();
+    }
+
+    handleTouchEnd(e) {
+        if (!this.touchStartElement) return;
+        
+        const touch = e.changedTouches[0];
+        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
+        
+        // Restaurar elemento
+        this.touchStartElement.style.position = '';
+        this.touchStartElement.style.zIndex = '';
+        this.touchStartElement.style.left = '';
+        this.touchStartElement.style.top = '';
+        this.touchStartElement.style.pointerEvents = '';
+        this.touchStartElement.classList.remove('dragging');
+        
+        // Remover highlight de todos los slots
+        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
+        
+        // Procesar drop si hay slot válido
+        if (slot) {
+            const colorIndex = parseInt(this.touchStartElement.dataset.colorIndex);
+            const slotIndex = parseInt(slot.dataset.slotIndex);
+            this.dropColorInSlot(colorIndex, slotIndex, slot);
+        }
+        
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        e.preventDefault();
+    }
+    
+    handleDragStart(e) {
+        e.dataTransfer.setData('text/plain', e.target.dataset.colorIndex);
+        e.target.classList.add('dragging');
+    }
+    
+    handleDragEnd(e) {
+        e.target.classList.remove('dragging');
+    }
+    
+    handleDragOver(e) {
+        e.preventDefault();
+    }
+    
+    handleDragEnter(e) {
+        const slot = e.target.closest('.sequence-slot');
+        if (slot) {
+            slot.classList.add('drag-over');
+        }
+    }
+    
+    handleDragLeave(e) {
+        const slot = e.target.closest('.sequence-slot');
+        if (slot) {
+            slot.classList.remove('drag-over');
+        }
+    }
+    
+    handleDrop(e) {
+        e.preventDefault();
+        
+        // Prevenir drop si se está reproduciendo la secuencia
+        if (this.isPlaying) {
+            this.showFeedback('🎵 Espera a que termine la secuencia para soltar colores', 'info');
+            return;
+        }
+        
+        const slot = e.target.closest('.sequence-slot');
+        if (!slot) return;
+        
+        const colorIndex = parseInt(e.dataTransfer.getData('text/plain'));
+        const slotIndex = parseInt(slot.dataset.slotIndex);
+        
+        slot.classList.remove('drag-over');
+        this.dropColorInSlot(colorIndex, slotIndex, slot);
+    }
+
+    // Método para modo híbrido: colocar color seleccionado en slot
+    placeColorInSlot(slotIndex) {
+        // Prevenir colocación si se está reproduciendo la secuencia
+        if (this.isPlaying) {
+            this.showFeedback('🎵 Espera a que termine la secuencia para colocar colores', 'info');
+            return;
+        }
+        
+        if (this.selectedColor === null) {
+            this.showFeedback('🎮 Primero selecciona un color haciendo clic en él', 'info');
+            return;
+        }
+
+        const slot = document.querySelector(`[data-slot-index="${slotIndex}"]`);
+        if (!slot) return;
+
+        this.dropColorInSlot(this.selectedColor, slotIndex, slot);
+        
+        // Deseleccionar el color después de colocarlo
+        const selectedColorDiv = document.querySelector('.color-item.selected');
+        if (selectedColorDiv) {
+            selectedColorDiv.classList.remove('selected');
+        }
+        this.selectedColor = null;
+    }
+    
+    dropColorInSlot(colorIndex, slotIndex, slot) {
+        const color = this.colors[colorIndex];
+        
+        slot.classList.add('filled');
+        slot.innerHTML = `
+            <div class="color-circle" style="background: ${color.colorCode}; width: 60px; height: 60px; border: 3px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.2);"></div>
+            <div class="color-name" style="font-size: 0.8rem; margin-top: 5px;">${color.name}</div>
+        `;
+        
+        this.userSequence[slotIndex] = colorIndex;
+        
+        // Feedback inmediato: verificar si este color es correcto en esta posición
+        if (this.currentSequence[slotIndex] === colorIndex) {
+            // Color correcto - resetear contador de errores
+            this.errorCount = 0;
+            slot.classList.add('correct');
+            setTimeout(() => {
+                slot.classList.remove('correct');
+            }, 1000);
+        } else {
+            // Color incorrecto - incrementar contador de errores
+            this.errorCount++;
+            this.lastErrorTime = Date.now();
+            slot.classList.add('error');
+            this.playGameSound('incorrect');
+            this.showFeedback(`❌ Color incorrecto en la posición ${slotIndex + 1}`, 'error');
+            
+            // Auto-replay después de 3 errores consecutivos
+            if (this.errorCount >= 3) {
+                this.showFeedback('🔊 Muchos errores, reproduciré la secuencia de nuevo...', 'info');
+                setTimeout(() => {
+                    this.resetUserSequence();
+                    this.playSequence();
+                    this.errorCount = 0; // Resetear contador
+                }, 2500);
+            }
+            
+            setTimeout(() => {
+                // Quitar el color incorrecto después de 1.5 segundos
+                slot.classList.remove('filled', 'error');
+                slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; font-weight: bold;">${slotIndex + 1}</div>`;
+                this.userSequence[slotIndex] = null;
+            }, 1500);
+            return; // No continuar con la verificación completa
+        }
+        
+        // Verificar si la secuencia está completa y automáticamente comprobar
+        if (this.userSequence.every(slot => slot !== null)) {
+            setTimeout(() => {
+                this.checkSequence();
+            }, 500);
+        }
+    }
+    
+    checkSequence() {
+        if (this.userSequence.some(slot => slot === null)) {
+            this.showFeedback('❌ Completa toda la secuencia antes de comprobar.', 'error');
+            this.playGameSound('incorrect');
+            return;
+        }
+        
+        const isCorrect = this.currentSequence.every((color, index) => 
+            color === this.userSequence[index]
+        );
+        
+        if (isCorrect) {
+            this.score += this.level * 10;
+            this.consecutiveCorrect++;
+            this.updateScore();
+            this.playGameSound('correct');
+            this.showFeedback(`🎉 ¡Excelente! ¡Ganaste ${this.level * 10} puntos!`, 'success');
+            
+            this.celebrateSuccess();
+            
+            setTimeout(() => {
+                this.nextLevel();
+            }, 2000);
+        } else {
+            this.consecutiveCorrect = 0;
+            this.playGameSound('incorrect');
+            this.showFeedback('❌ ¡Inténtalo de nuevo! La secuencia no es correcta.', 'error');
+            this.shakeSequence();
+            
+            // Mostrar feedback visual en los slots
+            this.showSequenceFeedback();
+            
+            // Auto-replay después de 2 segundos
+            setTimeout(() => {
+                this.resetUserSequence();
+                this.playSequence();
+                this.showFeedback('🔊 Escucha de nuevo la secuencia correcta', 'info');
+            }, 2000);
+        }
+    }
+
+    nextLevel() {
+        this.level++;
+        if (this.level > 15) {
+            this.completeGame();
+        } else {
+            this.generateNewSequence();
+            this.updateLevel();
+            // Auto-reproducir siguiente secuencia
+            setTimeout(() => {
+                this.playSequence();
+            }, 1000);
+        }
+    }
+
+    celebrateSuccess() {
+        const sequenceTitle = document.getElementById('sequenceTitle');
+        if (sequenceTitle) {
+            sequenceTitle.classList.add('correct');
+            setTimeout(() => {
+                sequenceTitle.classList.remove('correct');
+            }, 1800);
+        }
+        
+        const sequenceArea = document.querySelector('.sequence-area');
+        if (sequenceArea) {
+            sequenceArea.classList.add('celebrate', 'rainbow-effect');
+            setTimeout(() => {
+                sequenceArea.classList.remove('celebrate', 'rainbow-effect');
+            }, 1800);
+        }
+    }
+
+    shakeSequence() {
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach(slot => {
+            slot.classList.add('incorrect');
+            setTimeout(() => {
+                slot.classList.remove('incorrect');
+            }, 500);
+        });
+    }
+
+    showSequenceFeedback() {
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach((slot, index) => {
+            if (this.userSequence[index] !== null) {
+                if (this.userSequence[index] === this.currentSequence[index]) {
+                    slot.classList.add('correct');
+                } else {
+                    slot.classList.add('error');
+                }
+                
+                // Limpiar clases después de 1.5 segundos
+                setTimeout(() => {
+                    slot.classList.remove('correct', 'error');
+                }, 1500);
+            }
+        });
+    }
+
+    resetUserSequence() {
+        this.userSequence.fill(null);
+        const sequenceSlots = document.querySelectorAll('.sequence-slot');
+        sequenceSlots.forEach((slot, index) => {
+            slot.classList.remove('filled', 'correct', 'error');
+            slot.innerHTML = `<div class="slot-number" style="color: #ccc; font-size: 1.5rem; font-weight: bold;">${index + 1}</div>`;
+        });
+    }
+
+    completeGame() {
+        this.gameState = 'complete';
+        this.playGameSound('complete');
+        this.showFeedback(`🏆 ¡FELICITACIONES! Completaste todos los niveles con ${this.score} puntos!`, 'success');
+        
+        setTimeout(() => {
+            if (confirm('¿Quieres jugar de nuevo?')) {
+                this.resetGame();
+            }
+        }, 3000);
+    }
+    
+    resetGame() {
+        this.stopAllAudio();
+        this.score = 0;
+        this.level = 1;
+        this.consecutiveCorrect = 0;
+        this.errorCount = 0; // Resetear contador de errores
+        this.gameState = 'playing';
+        this.updateScore();
+        this.updateLevel();
+        this.generateNewSequence();
+        this.showFeedback('🔄 ¡Juego reiniciado! ¡Empecemos de nuevo!', 'success');
+    }
+    
+    updateScore() {
+        const scoreElement = document.getElementById('score');
+        const compactScore = document.querySelector('.compact-score .score-value');
+        
+        if (scoreElement) scoreElement.textContent = this.score;
+        if (compactScore) compactScore.textContent = this.score;
+    }
+    
+    updateLevel() {
+        const levelElement = document.getElementById('level');
+        const levelValue = document.querySelector('.level-indicator .level-value');
+        
+        if (levelElement) levelElement.textContent = this.level;
+        if (levelValue) levelValue.textContent = this.level;
+    }
+
+    updateUI() {
+        this.updateScore();
+        this.updateLevel();
+        
+        const startScreen = document.querySelector('.start-screen');
+        const gameElements = document.querySelector('.game-elements');
+        const gameArea = document.querySelector('.game-area');
+        const levelIndicator = document.querySelector('.level-indicator');
+        
+        if (this.gameStarted) {
+            if (startScreen) startScreen.style.display = 'none';
+            if (gameElements) gameElements.style.display = 'block';
+            if (gameArea) gameArea.style.display = 'grid';
+            if (levelIndicator) levelIndicator.style.display = 'block';
+        } else {
+            if (startScreen) startScreen.style.display = 'flex';
+            if (gameElements) gameElements.style.display = 'none';
+            if (gameArea) gameArea.style.display = 'none';
+            if (levelIndicator) levelIndicator.style.display = 'none';
+        }
+    }
+    
+    showFeedback(message, type) {
+        const feedback = document.getElementById('feedback');
+        if (feedback) {
+            // Asegurar que el elemento esté visible
+            feedback.style.display = 'block';
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+            
+            // Limpiar timeout anterior si existe
+            if (this.feedbackTimeout) {
+                clearTimeout(this.feedbackTimeout);
+            }
+            
+            // Programar ocultación automática
+            this.feedbackTimeout = setTimeout(() => {
+                feedback.classList.remove('show');
+                setTimeout(() => {
+                    feedback.style.display = 'none';
+                }, 300); // Esperar a que termine la transición
+            }, 3000);
+        }
+    }
+}
+
+// Inicializar el juego cuando se carga la página
+document.addEventListener('DOMContentLoaded', () => {
+    new ColorSequenceGame();
+});
+</script>
+{% endblock %}

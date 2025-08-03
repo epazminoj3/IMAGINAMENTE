@@ -1,0 +1,232 @@
+{% extends 'juegos/base.html' %}
+
+{% block title %}🎮 Lista de Juegos - 🌈 Imaginamente 🌈{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🎮 Nuestros Juegos Educativos</h1>
+    <p>Selecciona un juego para comenzar a aprender de forma divertida</p>
+</div>
+
+<div class="juegos-container">
+    {% if juegos %}
+        <div class="juegos-grid">
+            {% for juego in juegos %}
+            <div class="juego-card">
+                {% if juego.imagen_principal %}
+                    <div class="juego-imagen">
+                        <img src="{{ juego.imagen_principal.url }}" alt="{{ juego.titulo }}">
+                    </div>
+                {% else %}
+                    <div class="juego-imagen-placeholder">
+                        <div class="placeholder-icon">🎲</div>
+                    </div>
+                {% endif %}
+                
+                <div class="juego-info">
+                    <h3>{{ juego.titulo }}</h3>
+                    <p class="juego-descripcion">{{ juego.descripcion|truncatewords:20 }}</p>
+                    
+                    <div class="juego-meta">
+                        <span class="categoria">📚 {{ juego.categoria|default:"General" }}</span>
+                        <span class="dificultad">⭐ {{ juego.dificultad|default:"Medio" }}</span>
+                    </div>
+                    
+                    <a href="{% url 'juegos:juego_detalle' juego.id %}" class="jugar-btn">
+                        Jugar Ahora
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-juegos">
+            <div class="no-juegos-icon">🎯</div>
+            <h2>¡Próximamente más juegos!</h2>
+            <p>Estamos trabajando en nuevos juegos educativos para ti.</p>
+            <a href="{% url 'juegos:home' %}" class="volver-btn">Volver al Inicio</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.page-header p {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.juegos-container {
+    margin-top: 2rem;
+}
+
+.juegos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.juego-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.juego-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.juego-imagen, .juego-imagen-placeholder {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.juego-imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.juego-imagen-placeholder {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    color: white;
+}
+
+.juego-info {
+    padding: 1.5rem;
+}
+
+.juego-info h3 {
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.juego-descripcion {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+}
+
+.juego-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.categoria, .dificultad {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.jugar-btn {
+    display: inline-block;
+    width: 100%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    text-align: center;
+    padding: 0.8rem 1.5rem;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.jugar-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.no-juegos {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 4rem 2rem;
+    border-radius: 20px;
+    margin-top: 2rem;
+}
+
+.no-juegos-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.no-juegos h2 {
+    color: white;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.no-juegos p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.volver-btn {
+    display: inline-block;
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    padding: 1rem 2rem;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.volver-btn:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .juegos-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .juego-meta {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}

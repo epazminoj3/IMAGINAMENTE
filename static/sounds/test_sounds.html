@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔊 Prueba de Sonidos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+        }
+        .test-button {
+            background: #4ECDC4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background: #45a8a2;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🔊 Prueba de Sonidos de Animales</h1>
+    <p>Haz clic en los botones para probar si los sonidos funcionan:</p>
+    
+    <div id="status"></div>
+    
+    <button class="test-button" onclick="testSound('perro')">🐶 Perro</button>
+    <button class="test-button" onclick="testSound('gato')">🐱 Gato</button>
+    <button class="test-button" onclick="testSound('vaca')">🐮 Vaca</button>
+    <button class="test-button" onclick="testSound('cerdo')">🐷 Cerdo</button>
+    <button class="test-button" onclick="testSound('rana')">🐸 Rana</button>
+    <button class="test-button" onclick="testSound('pajaro')">🐦 Pájaro</button>
+    
+    <script>
+        function testSound(animal) {
+            const audio = new Audio();
+            const statusDiv = document.getElementById('status');
+            
+            audio.src = `/static/sounds/${animal}.mp3`;
+            
+            audio.addEventListener('canplaythrough', () => {
+                statusDiv.innerHTML = `<div class="status success">✅ ${animal}.mp3 cargado correctamente</div>`;
+                audio.play();
+            });
+            
+            audio.addEventListener('error', () => {
+                // Intentar con .wav
+                audio.src = `/static/sounds/${animal}.wav`;
+                audio.addEventListener('canplaythrough', () => {
+                    statusDiv.innerHTML = `<div class="status success">✅ ${animal}.wav cargado correctamente</div>`;
+                    audio.play();
+                });
+                
+                audio.addEventListener('error', () => {
+                    statusDiv.innerHTML = `<div class="status error">❌ No se encontró ${animal}.mp3 ni ${animal}.wav</div>`;
+                });
+            });
+            
+            audio.load();
+        }
+    </script>
+</body>
+</html>
