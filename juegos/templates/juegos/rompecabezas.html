@@ -744,6 +744,45 @@
         opacity: 0.8;
     }
 
+    /* Elemento de arrastre para móvil */
+    .touch-drag-element {
+        position: fixed !important;
+        z-index: 999999 !important; /* Z-index súper alto para estar sobre TODO */
+        pointer-events: none !important;
+        border-radius: 10px !important;
+        border: 3px solid rgba(255,255,255,0.9) !important;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.5) !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        opacity: 0.95 !important;
+        transition: none !important;
+        /* Asegurar que aparezca sobre todo */
+        will-change: left, top !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        /* Forzar contexto de apilamiento propio */
+        isolation: isolate !important;
+        /* Eliminar cualquier transform inicial que pueda interferir */
+        transform: none !important;
+    }
+
+    /* Mejorar feedback visual en móvil */
+    @media (max-width: 768px) {
+        .puzzle-slot.drag-over {
+            border-color: #ff6b6b !important;
+            background: rgba(255,107,107,0.4) !important;
+            transform: scale(1.05) !important;
+            box-shadow: 0 0 20px rgba(255,107,107,0.6) !important;
+        }
+        
+        .puzzle-piece {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+    }
+
     /* Tablero del rompecabezas */
     .puzzle-board {
         background: rgba(255,255,255,0.1);
@@ -1047,11 +1086,6 @@
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
 
-    /* Ocultar footer durante el juego */
-    .game-active footer {
-        display: none !important;
-    }
-
     /* Optimización para pantallas grandes (PC) */
     @media (min-width: 1024px) {
         .start-screen {
@@ -1190,8 +1224,8 @@
             height: 85px;
         }
 
-        /* Responsive para indicadores en móvil */
-        .level-indicator {
+        /* Responsive para indicadores en móvil - SOLO cuando el juego está activo */
+        .game-active .level-indicator {
             position: relative;
             top: auto;
             right: auto;
@@ -1201,7 +1235,7 @@
             padding: 8px 15px;
         }
 
-        .reference-indicator {
+        .game-active .reference-indicator.show {
             position: relative;
             bottom: auto;
             left: auto;
@@ -1209,6 +1243,15 @@
             display: block !important;
             font-size: 0.8rem;
             padding: 8px 12px;
+        }
+
+        /* Ocultar indicadores en pantallas de inicio/selección en móvil */
+        .level-indicator {
+            display: none !important;
+        }
+
+        .reference-indicator {
+            display: none !important;
         }
 
         .reference-indicator-title {
@@ -1574,6 +1617,12 @@ class PuzzleGame {
         this.audioContext = null;
         this.gameAudio = {};
         
+        // Propiedades para touch mejorado en móvil
+        this.touchDragElement = null;
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        this.isMobile = window.innerWidth <= 768;
+        
         // Configuración de imágenes disponibles
         this.availableImages = [
             { name: 'Gato', file: 'gato.jpg' },
@@ -1600,6 +1649,11 @@ class PuzzleGame {
         this.setupStartScreen();
         this.createModalImageOptions();
         this.hideGameElements();
+        
+        // Event listener para detectar cambios de tamaño y actualizar isMobile
+        window.addEventListener('resize', () => {
+            this.isMobile = window.innerWidth <= 768;
+        });
     }
 
     hideGameElements() {
@@ -1743,6 +1797,9 @@ class PuzzleGame {
         const startScreen = document.querySelector('.start-screen');
         
         if (screen && startScreen) {
+            // Agregar clase para ocultar footer
+            document.body.classList.add('puzzle-selection-active');
+            
             startScreen.style.display = 'none';
             screen.classList.add('show');
             
@@ -1771,6 +1828,9 @@ class PuzzleGame {
         const startScreen = document.querySelector('.start-screen');
         
         if (screen && startScreen) {
+            // Remover clase para mostrar footer si regresamos al home
+            document.body.classList.remove('puzzle-selection-active');
+            
             screen.classList.remove('show');
             startScreen.style.display = 'flex';
         }
@@ -1843,6 +1903,10 @@ class PuzzleGame {
             this.hideInstructions();
             setTimeout(() => this.showPuzzleSelectionScreen(), 300);
         });
+
+        // Event listeners globales para touch en móvil
+        document.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+        document.addEventListener('touchend', (e) => this.handleTouchEnd(e), { passive: false });
     }
 
     setupStartScreen() {
@@ -1856,6 +1920,8 @@ class PuzzleGame {
 
     startGameWithSelection() {
         document.body.classList.add('game-active');
+        // Remover otras clases
+        document.body.classList.remove('puzzle-selection-active', 'instructions-active');
         
         const startScreen = document.querySelector('.start-screen');
         const gameElements = document.querySelector('.game-elements');
@@ -1912,12 +1978,18 @@ class PuzzleGame {
     }
 
     showInstructions() {
+        // Agregar clase para ocultar footer
+        document.body.classList.add('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
     }
 
     hideInstructions() {
+        // Remover clase para mostrar footer si regresamos al home
+        document.body.classList.remove('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         modal.classList.remove('show');
         setTimeout(() => modal.style.display = 'none', 300);
@@ -2043,9 +2115,7 @@ class PuzzleGame {
             piece.addEventListener('dragend', (e) => this.handleDragEnd(e));
             
             // Touch events para móviles
-            piece.addEventListener('touchstart', (e) => this.handleTouchStart(e));
-            piece.addEventListener('touchmove', (e) => this.handleTouchMove(e));
-            piece.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            piece.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: false });
             
             container.appendChild(piece);
             this.pieces.push(piece);
@@ -2099,29 +2169,100 @@ class PuzzleGame {
         this.placePiece(correctPosition, slotPosition, slot);
     }
 
-    // Touch events para móviles
+    // Touch events mejorados para móviles
     handleTouchStart(e) {
+        if (!this.isMobile) return; // Solo en móvil
+        
         const piece = e.target.closest('.puzzle-piece');
         if (piece) {
             this.touchStartElement = piece;
+            const touch = e.touches[0];
+            const rect = piece.getBoundingClientRect();
+            
+            // Calcular offset simple - desde el centro de la pieza
             this.touchOffset = {
-                x: e.touches[0].clientX - piece.getBoundingClientRect().left,
-                y: e.touches[0].clientY - piece.getBoundingClientRect().top
+                x: rect.width / 2,
+                y: rect.height / 2
             };
+            
+            // Crear elemento de arrastre clonado
+            this.createTouchDragElement(piece, touch);
+            
+            // Ocultar pieza original
+            piece.style.opacity = '0.3';
+            
             e.preventDefault();
         }
     }
 
+    createTouchDragElement(piece, touch) {
+        // Remover elemento anterior si existe
+        if (this.touchDragElement) {
+            this.touchDragElement.remove();
+        }
+        
+        // Crear nuevo elemento de arrastre
+        this.touchDragElement = document.createElement('div');
+        this.touchDragElement.className = 'touch-drag-element';
+        
+        // Obtener el tamaño real del elemento original
+        const rect = piece.getBoundingClientRect();
+        
+        // Configurar el elemento con el tamaño exacto de la pieza original
+        this.touchDragElement.style.width = rect.width + 'px';
+        this.touchDragElement.style.height = rect.height + 'px';
+        this.touchDragElement.style.backgroundImage = piece.style.backgroundImage;
+        
+        // Posicionar usando left/top para asegurar que funcione
+        const x = touch.clientX - this.touchOffset.x;
+        const y = touch.clientY - this.touchOffset.y - 15; // Solo 15px más arriba para que aparezca justo sobre el dedo
+        
+        this.touchDragElement.style.left = x + 'px';
+        this.touchDragElement.style.top = y + 'px';
+        this.touchDragElement.style.transform = 'scale(1.1)'; // Solo para el efecto de escala
+        
+        // Debug: log de posicionamiento
+        console.log('Touch drag element created:', {
+            touchX: touch.clientX,
+            touchY: touch.clientY,
+            offsetX: this.touchOffset.x,
+            offsetY: this.touchOffset.y,
+            finalX: x,
+            finalY: y,
+            elementWidth: rect.width,
+            elementHeight: rect.height
+        });
+        
+        // Agregar directamente al body para evitar contextos de apilamiento
+        document.body.appendChild(this.touchDragElement);
+    }
+
     handleTouchMove(e) {
-        if (!this.touchStartElement) return;
+        if (!this.isMobile || !this.touchStartElement || !this.touchDragElement) return;
         
         const touch = e.touches[0];
-        this.touchStartElement.style.position = 'fixed';
-        this.touchStartElement.style.zIndex = '1000';
-        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-        this.touchStartElement.style.pointerEvents = 'none';
-        this.touchStartElement.classList.add('dragging');
+        
+        // Calcular nueva posición con offset hacia arriba
+        const newX = touch.clientX - this.touchOffset.x;
+        const newY = touch.clientY - this.touchOffset.y - 15; // Solo 15px más arriba del dedo para mejor precision
+        
+        // Mover elemento usando left/top para asegurar movimiento
+        this.touchDragElement.style.left = newX + 'px';
+        this.touchDragElement.style.top = newY + 'px';
+        
+        // Debug ocasional (cada 5 movimientos aproximadamente)
+        if (Math.random() < 0.2) {
+            console.log('Touch move:', {
+                touchX: touch.clientX,
+                touchY: touch.clientY,
+                elementX: newX,
+                elementY: newY,
+                offsetX: this.touchOffset.x,
+                offsetY: this.touchOffset.y,
+                elementExists: !!this.touchDragElement,
+                elementStyle: this.touchDragElement ? this.touchDragElement.style.left + ',' + this.touchDragElement.style.top : 'none'
+            });
+        }
         
         // Encontrar slot debajo del dedo
         const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -2139,19 +2280,20 @@ class PuzzleGame {
     }
 
     handleTouchEnd(e) {
-        if (!this.touchStartElement) return;
+        if (!this.isMobile || !this.touchStartElement) return;
         
         const touch = e.changedTouches[0];
         const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
         const slot = elementBelow ? elementBelow.closest('.puzzle-slot') : null;
         
-        // Restaurar elemento
-        this.touchStartElement.style.position = '';
-        this.touchStartElement.style.zIndex = '';
-        this.touchStartElement.style.left = '';
-        this.touchStartElement.style.top = '';
-        this.touchStartElement.style.pointerEvents = '';
-        this.touchStartElement.classList.remove('dragging');
+        // Restaurar pieza original
+        this.touchStartElement.style.opacity = '';
+        
+        // Remover elemento de arrastre
+        if (this.touchDragElement) {
+            this.touchDragElement.remove();
+            this.touchDragElement = null;
+        }
         
         // Remover highlight
         document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('drag-over'));
@@ -2238,17 +2380,23 @@ class PuzzleGame {
     }
 
     playAgain() {
+        this.cleanupTouchElements();
         this.hideCompletionModal();
+        // Cambiar a pantalla de selección, no al home
+        document.body.classList.remove('game-active');
+        document.body.classList.add('puzzle-selection-active');
         setTimeout(() => {
             this.showPuzzleSelectionScreen();
         }, 300);
     }
 
     goToHome() {
+        this.cleanupTouchElements();
         this.hideCompletionModal();
         this.resetStats();
         
-        document.body.classList.remove('game-active');
+        // Remover todas las clases relacionadas con el juego
+        document.body.classList.remove('game-active', 'puzzle-selection-active', 'instructions-active');
         
         const startScreen = document.querySelector('.start-screen');
         const gameElements = document.querySelector('.game-elements');
@@ -2266,8 +2414,24 @@ class PuzzleGame {
     }
 
     resetPuzzle() {
+        // Limpiar elementos de touch
+        this.cleanupTouchElements();
         this.createPuzzle();
         this.showFeedback('🔄 ¡Rompecabezas reiniciado!', 'success');
+    }
+
+    cleanupTouchElements() {
+        if (this.touchDragElement) {
+            this.touchDragElement.remove();
+            this.touchDragElement = null;
+        }
+        this.touchStartElement = null;
+        this.touchOffset = null;
+        
+        // Restaurar opacidad de todas las piezas
+        document.querySelectorAll('.puzzle-piece').forEach(piece => {
+            piece.style.opacity = '';
+        });
     }
 
     resetStats() {
@@ -2304,61 +2468,6 @@ class PuzzleGame {
         }
     }
 
-    handleTouchStart(e) {
-        const piece = e.target.closest('.puzzle-piece');
-        if (piece) {
-            e.preventDefault();
-            this.touchStartElement = piece;
-            const rect = piece.getBoundingClientRect();
-            const touch = e.touches[0];
-            this.touchOffset = {
-                x: touch.clientX - rect.left,
-                y: touch.clientY - rect.top
-            };
-        }
-    }
-
-    handleTouchMove(e) {
-        if (!this.touchStartElement) return;
-        
-        const touch = e.touches[0];
-        this.touchStartElement.style.position = 'fixed';
-        this.touchStartElement.style.zIndex = '1000';
-        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-        this.touchStartElement.style.pointerEvents = 'none';
-        this.touchStartElement.classList.add('dragging');
-        
-        e.preventDefault();
-    }
-
-    handleTouchEnd(e) {
-        if (!this.touchStartElement) return;
-        
-        // Restaurar estilo original
-        this.touchStartElement.style.position = '';
-        this.touchStartElement.style.zIndex = '';
-        this.touchStartElement.style.left = '';
-        this.touchStartElement.style.top = '';
-        this.touchStartElement.style.pointerEvents = '';
-        this.touchStartElement.classList.remove('dragging');
-        
-        // Encontrar slot debajo del dedo
-        const touch = e.changedTouches[0];
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const slot = elementBelow?.closest('.puzzle-slot');
-        
-        // Procesar drop
-        if (slot && !slot.classList.contains('filled')) {
-            const correctPosition = parseInt(this.touchStartElement.dataset.correctPosition);
-            const slotPosition = parseInt(slot.dataset.position);
-            this.placePiece(correctPosition, slotPosition, slot);
-        }
-        
-        this.touchStartElement = null;
-        this.touchOffset = null;
-        e.preventDefault();
-    }
 }
 
 // Inicializar el juego cuando se carga la página

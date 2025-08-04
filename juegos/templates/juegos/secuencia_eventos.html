@@ -701,11 +701,6 @@
         animation: celebrate 0.6s ease-in-out 3;
     }
     
-    /* Ocultar footer durante el juego */
-    .game-active footer {
-        display: none !important;
-    }
-    
     /* Modal de finalización del juego */
     .completion-modal {
         position: fixed;
@@ -1088,7 +1083,8 @@
             font-size: 0.8rem;
         }
         
-        .level-indicator {
+        /* Responsive para indicadores en móvil - SOLO cuando el juego está activo */
+        .game-active .level-indicator {
             position: relative;
             top: auto;
             right: auto;
@@ -1096,6 +1092,11 @@
             display: block !important;
             font-size: 0.9rem;
             padding: 8px 15px;
+        }
+
+        /* Ocultar indicadores en pantallas de inicio en móvil */
+        .level-indicator {
+            display: none !important;
         }
         
         .instructions-content {
@@ -1484,8 +1485,6 @@ class EventSequenceGame {
         this.gameStarted = false;
         this.sequenceShown = false;
         this.gameState = 'waiting';
-        this.touchStartElement = null;
-        this.touchOffset = null;
         this.audioContext = null;
         this.gameAudio = {};
         this.instructionsAudio = null;
@@ -1694,6 +1693,9 @@ class EventSequenceGame {
     }
 
     showInstructions() {
+        // Agregar clase para ocultar footer
+        document.body.classList.add('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         if (modal) {
             modal.style.display = 'flex';
@@ -1707,6 +1709,9 @@ class EventSequenceGame {
     }
 
     hideInstructions() {
+        // Remover clase para mostrar footer si regresamos al home
+        document.body.classList.remove('instructions-active');
+        
         this.stopAllAudio();
         const modal = document.getElementById('instructions-modal');
         if (modal) {
@@ -1875,13 +1880,118 @@ class EventSequenceGame {
             eventDiv.addEventListener('dragstart', (e) => this.handleDragStart(e));
             eventDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
             
-            // Touch events para dispositivos móviles
-            eventDiv.addEventListener('touchstart', (e) => this.handleTouchStart(e));
-            eventDiv.addEventListener('touchmove', (e) => this.handleTouchMove(e));
-            eventDiv.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            // Touch events para dispositivos móviles - sistema simple
+            this.addTouchSupport(eventDiv);
             
             container.appendChild(eventDiv);
         });
+    }
+
+    addTouchSupport(element) {
+        let isDragging = false;
+        let draggedElement = null;
+        let touchStartTime = 0;
+        
+        element.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            e.preventDefault();
+            if (element.classList.contains('event-item')) {
+                draggedElement = element;
+                element.style.opacity = '0.7';
+                element.style.transform = 'scale(1.1)';
+                element.style.zIndex = '1000';
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchmove', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            isDragging = true;
+            const touch = e.touches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Limpiar todos los highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            // Agregar highlight al slot actual
+            if (elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot) {
+                    slot.classList.add('drag-over');
+                }
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchend', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Restaurar estilo
+            draggedElement.style.opacity = '';
+            draggedElement.style.transform = '';
+            draggedElement.style.zIndex = '';
+            
+            // Si fue un tap corto (menos de 300ms) y no se movió mucho, seleccionar
+            if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('event-item')) {
+                const stepOrder = parseInt(draggedElement.dataset.stepOrder);
+                this.selectStep(stepOrder);
+            }
+            // Si fue un tap corto en un slot y hay paso seleccionado
+            else if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('sequence-slot') && this.selectedStep !== null) {
+                const slotIndex = parseInt(draggedElement.dataset.slotIndex);
+                this.placeStepInSlot(slotIndex);
+            }
+            // Si fue un drag, procesar drop
+            else if (isDragging && elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot && draggedElement.classList.contains('event-item')) {
+                    const stepOrder = parseInt(draggedElement.dataset.stepOrder);
+                    const slotIndex = parseInt(slot.dataset.slotIndex);
+                    this.dropEventInSlot(stepOrder, slotIndex, slot);
+                }
+            }
+            
+            // Limpiar highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            isDragging = false;
+        }, { passive: false });
+    }
+
+    selectStep(stepOrder) {
+        // Si ya hay un paso seleccionado, deseleccionarlo
+        if (this.selectedStep !== null) {
+            const prevSelected = document.querySelector('.event-item.selected');
+            if (prevSelected) {
+                prevSelected.classList.remove('selected');
+            }
+        }
+        
+        const stepElement = document.querySelector(`[data-step-order="${stepOrder}"]`);
+        
+        // Si es el mismo paso, deseleccionar
+        if (this.selectedStep === stepOrder) {
+            this.selectedStep = null;
+            if (stepElement) {
+                stepElement.classList.remove('selected');
+            }
+        } else {
+            // Seleccionar nuevo paso
+            this.selectedStep = stepOrder;
+            if (stepElement) {
+                stepElement.classList.add('selected');
+            }
+        }
     }
     
     createSequenceSlots() {
@@ -1909,6 +2019,9 @@ class EventSequenceGame {
             slot.addEventListener('click', (e) => {
                 this.placeStepInSlot(i);
             });
+            
+            // Agregar soporte táctil a los slots también
+            this.addTouchSupport(slot);
             
             container.appendChild(slot);
         }
@@ -2053,83 +2166,6 @@ class EventSequenceGame {
                 this.showFeedback('¡Perfecto! Ahora arrastra las tarjetas en el orden correcto.', 'success');
             }, 1000);
         }
-    }
-    
-    handleTouchStart(e) {
-        const touch = e.touches[0];
-        const element = e.target.closest('.event-item');
-        if (element) {
-            element.classList.add('dragging');
-            this.touchStartElement = element;
-            this.touchOffset = {
-                x: touch.clientX - element.getBoundingClientRect().left,
-                y: touch.clientY - element.getBoundingClientRect().top
-            };
-            
-            // Prevenir scroll y otros eventos
-            e.preventDefault();
-            e.stopPropagation();
-        }
-    }
-
-    handleTouchMove(e) {
-        if (!this.touchStartElement) return;
-        
-        const touch = e.touches[0];
-        this.touchStartElement.style.position = 'fixed';
-        this.touchStartElement.style.zIndex = '1000';
-        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-        this.touchStartElement.style.pointerEvents = 'none';
-        
-        // Encontrar el slot debajo del dedo
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
-        
-        // Remover highlight de todos los slots
-        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
-        
-        // Agregar highlight al slot actual
-        if (slot) {
-            slot.classList.add('drag-over');
-        }
-        
-        // Prevenir scroll y otros eventos
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    handleTouchEnd(e) {
-        if (!this.touchStartElement) return;
-        
-        const touch = e.changedTouches[0];
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
-        
-        // Restaurar elemento
-        this.touchStartElement.style.position = '';
-        this.touchStartElement.style.zIndex = '';
-        this.touchStartElement.style.left = '';
-        this.touchStartElement.style.top = '';
-        this.touchStartElement.style.pointerEvents = '';
-        this.touchStartElement.classList.remove('dragging');
-        
-        // Remover highlight de todos los slots
-        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
-        
-        // Procesar drop si hay slot válido
-        if (slot) {
-            const stepOrder = parseInt(this.touchStartElement.dataset.stepOrder);
-            const slotIndex = parseInt(slot.dataset.slotIndex);
-            this.dropEventInSlot(stepOrder, slotIndex, slot);
-        }
-        
-        this.touchStartElement = null;
-        this.touchOffset = null;
-        
-        // Prevenir eventos adicionales
-        e.preventDefault();
-        e.stopPropagation();
     }
     
     handleDragStart(e) {
@@ -2354,7 +2390,7 @@ class EventSequenceGame {
         this.hideCompletionModal();
         
         // Restaurar estado inicial
-        document.body.classList.remove('game-active');
+        document.body.classList.remove('game-active', 'instructions-active');
         
         const startScreen = document.querySelector('.start-screen');
         const gameElements = document.querySelector('.game-elements');

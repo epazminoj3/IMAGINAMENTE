@@ -552,11 +552,6 @@
         box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
 
-    /* Ocultar footer durante el juego */
-    .game-active footer {
-        display: none !important;
-    }
-
     /* Optimización para pantallas grandes (PC) */
     @media (min-width: 1024px) {
         .start-screen {
@@ -625,7 +620,8 @@
             font-size: 1.2rem;
         }
 
-        .level-indicator {
+        /* Responsive para indicadores en móvil - SOLO cuando el juego está activo */
+        .game-active .level-indicator {
             position: relative;
             top: auto;
             right: auto;
@@ -633,6 +629,11 @@
             display: block !important;
             font-size: 0.9rem;
             padding: 8px 15px;
+        }
+
+        /* Ocultar indicadores en pantallas de inicio en móvil */
+        .level-indicator {
+            display: none !important;
         }
 
         .completion-modal-content {
@@ -1042,12 +1043,18 @@ class MemoryGame {
     }
 
     showInstructions() {
+        // Agregar clase para ocultar footer
+        document.body.classList.add('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         modal.style.display = 'flex';
         setTimeout(() => modal.classList.add('show'), 10);
     }
 
     hideInstructions() {
+        // Remover clase para mostrar footer si regresamos al home
+        document.body.classList.remove('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         modal.classList.remove('show');
         setTimeout(() => modal.style.display = 'none', 300);
@@ -1303,7 +1310,8 @@ class MemoryGame {
     goToHome() {
         this.hideCompletionModal();
         
-        document.body.classList.remove('game-active');
+        // Remover todas las clases relacionadas con el juego
+        document.body.classList.remove('game-active', 'instructions-active');
         
         const startScreen = document.querySelector('.start-screen');
         const gameElements = document.querySelector('.game-elements');

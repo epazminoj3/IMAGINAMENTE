@@ -643,11 +643,7 @@
         animation: celebrate 0.6s ease-in-out 3;
     }
     
-    /* Ocultar footer durante el juego */
-    .game-active footer {
-        display: none !important;
-    }
-    
+    /* Responsive Design */
     /* Responsive Design */
     @media (max-width: 768px) {
         .game-container {
@@ -735,7 +731,8 @@
             display: none !important;
         }
         
-        .level-indicator {
+        /* Responsive para indicadores en móvil - SOLO cuando el juego está activo */
+        .game-active .level-indicator {
             position: relative;
             top: auto;
             right: auto;
@@ -743,6 +740,11 @@
             display: block !important;
             font-size: 0.9rem;
             padding: 8px 15px;
+        }
+
+        /* Ocultar indicadores en pantallas de inicio en móvil */
+        .level-indicator {
+            display: none !important;
         }
 
         .mode-indicator {
@@ -1190,6 +1192,9 @@ class AnimalSequenceGame {
     }
 
     showInstructions() {
+        // Agregar clase para ocultar footer
+        document.body.classList.add('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         if (modal) {
             modal.style.display = 'flex';
@@ -1208,6 +1213,9 @@ class AnimalSequenceGame {
     }
 
     hideInstructions() {
+        // Remover clase para mostrar footer si regresamos al home
+        document.body.classList.remove('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         if (modal) {
             modal.classList.remove('show');
@@ -2020,7 +2028,8 @@ class AnimalSequenceGame {
         }
         
         // Remover clase para mostrar footer
-        document.body.classList.remove('game-active');
+        // Remover todas las clases relacionadas con el juego
+        document.body.classList.remove('game-active', 'instructions-active');
         
         this.score = 0;
         this.level = 1;

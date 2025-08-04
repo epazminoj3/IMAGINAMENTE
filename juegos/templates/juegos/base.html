@@ -463,6 +463,12 @@
             border-top: 5px solid #4ECDC4;
             font-weight: 600;
             font-size: clamp(0.9rem, 2vw, 1rem);
+            display: none; /* Ocultar footer por defecto */
+        }
+
+        /* Solo mostrar footer en la página home */
+        .home-page footer {
+            display: block;
         }
         
         .footer-content {

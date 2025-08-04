@@ -651,11 +651,6 @@
         animation: rainbow 2s linear infinite;
     }
     
-    /* Ocultar footer durante el juego */
-    .game-active footer {
-        display: none !important;
-    }
-    
     /* Responsive Design */
     @media (max-width: 768px) {
         .game-container {
@@ -746,7 +741,8 @@
             display: none !important;
         }
         
-        .level-indicator {
+        /* Responsive para indicadores en móvil - SOLO cuando el juego está activo */
+        .game-active .level-indicator {
             position: relative;
             top: auto;
             right: auto;
@@ -754,6 +750,11 @@
             display: block !important;
             font-size: 0.9rem;
             padding: 8px 15px;
+        }
+
+        /* Ocultar indicadores en pantallas de inicio en móvil */
+        .level-indicator {
+            display: none !important;
         }
         
         .repeat-button {
@@ -1219,6 +1220,9 @@ class ColorSequenceGame {
     }
 
     showInstructions() {
+        // Agregar clase para ocultar footer
+        document.body.classList.add('instructions-active');
+        
         const modal = document.getElementById('instructions-modal');
         if (modal) {
             modal.style.display = 'flex';
@@ -1232,6 +1236,9 @@ class ColorSequenceGame {
     }
 
     hideInstructions() {
+        // Remover clase para mostrar footer si regresamos al home
+        document.body.classList.remove('instructions-active');
+        
         this.stopAllAudio();
         const modal = document.getElementById('instructions-modal');
         if (modal) {
@@ -1567,21 +1574,126 @@ class ColorSequenceGame {
             });
             colorDiv.addEventListener('dragend', (e) => this.handleDragEnd(e));
             
-            // Touch events para dispositivos móviles
-            colorDiv.addEventListener('touchstart', (e) => {
-                // Prevenir touch si se está reproduciendo la secuencia
-                if (this.isPlaying) {
-                    e.preventDefault();
-                    this.showFeedback('🎵 Espera a que termine la secuencia para tocar colores', 'info');
-                    return;
-                }
-                this.handleTouchStart(e);
-            });
-            colorDiv.addEventListener('touchmove', (e) => this.handleTouchMove(e));
-            colorDiv.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+            // Touch events para dispositivos móviles - sistema simple
+            this.addTouchSupport(colorDiv);
             
             container.appendChild(colorDiv);
         });
+    }
+
+    addTouchSupport(element) {
+        let isDragging = false;
+        let draggedElement = null;
+        let touchStartTime = 0;
+        
+        element.addEventListener('touchstart', (e) => {
+            // Prevenir touch si se está reproduciendo la secuencia
+            if (this.isPlaying) {
+                e.preventDefault();
+                this.showFeedback('🎵 Espera a que termine la secuencia para tocar colores', 'info');
+                return;
+            }
+            
+            touchStartTime = Date.now();
+            e.preventDefault();
+            if (element.classList.contains('color-item')) {
+                draggedElement = element;
+                element.style.opacity = '0.7';
+                element.style.transform = 'scale(1.1)';
+                element.style.zIndex = '1000';
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchmove', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            isDragging = true;
+            const touch = e.touches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Limpiar todos los highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            // Agregar highlight al slot actual
+            if (elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot) {
+                    slot.classList.add('drag-over');
+                }
+            }
+        }, { passive: false });
+        
+        element.addEventListener('touchend', (e) => {
+            if (!draggedElement) return;
+            e.preventDefault();
+            
+            const touchDuration = Date.now() - touchStartTime;
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            
+            // Restaurar estilo
+            draggedElement.style.opacity = '';
+            draggedElement.style.transform = '';
+            draggedElement.style.zIndex = '';
+            
+            // Si fue un tap corto (menos de 300ms) y no se movió mucho, reproducir sonido y seleccionar
+            if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('color-item')) {
+                const colorIndex = parseInt(draggedElement.dataset.colorIndex);
+                this.playColorSound(colorIndex);
+                this.selectColor(colorIndex);
+            }
+            // Si fue un tap corto en un slot y hay color seleccionado
+            else if (touchDuration < 300 && !isDragging && draggedElement.classList.contains('sequence-slot') && this.selectedColor !== null) {
+                const slotIndex = parseInt(draggedElement.dataset.slotIndex);
+                this.placeColorInSlot(slotIndex);
+            }
+            // Si fue un drag, procesar drop
+            else if (isDragging && elementBelow) {
+                const slot = elementBelow.closest('.sequence-slot');
+                if (slot && draggedElement.classList.contains('color-item')) {
+                    const colorIndex = parseInt(draggedElement.dataset.colorIndex);
+                    const slotIndex = parseInt(slot.dataset.slotIndex);
+                    this.dropColorInSlot(colorIndex, slotIndex, slot);
+                }
+            }
+            
+            // Limpiar highlights
+            document.querySelectorAll('.sequence-slot').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+            
+            draggedElement = null;
+            isDragging = false;
+        }, { passive: false });
+    }
+
+    selectColor(colorIndex) {
+        // Si ya hay un color seleccionado, deseleccionarlo
+        if (this.selectedColor !== null) {
+            const prevSelected = document.querySelector('.color-item.selected');
+            if (prevSelected) {
+                prevSelected.classList.remove('selected');
+            }
+        }
+        
+        const colorElement = document.querySelector(`[data-color-index="${colorIndex}"]`);
+        
+        // Si es el mismo color, deseleccionar
+        if (this.selectedColor === colorIndex) {
+            this.selectedColor = null;
+            if (colorElement) {
+                colorElement.classList.remove('selected');
+            }
+        } else {
+            // Seleccionar nuevo color
+            this.selectedColor = colorIndex;
+            if (colorElement) {
+                colorElement.classList.add('selected');
+            }
+        }
     }
     
     createSequenceSlots() {
@@ -1612,6 +1724,9 @@ class ColorSequenceGame {
                 }
                 this.placeColorInSlot(i);
             });
+            
+            // Agregar soporte táctil a los slots también
+            this.addTouchSupport(slot);
             
             container.appendChild(slot);
         }
@@ -1716,75 +1831,6 @@ class ColorSequenceGame {
     
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    
-    handleTouchStart(e) {
-        const touch = e.touches[0];
-        const element = e.target.closest('.color-item');
-        if (element) {
-            element.classList.add('dragging');
-            this.touchStartElement = element;
-            this.touchOffset = {
-                x: touch.clientX - element.getBoundingClientRect().left,
-                y: touch.clientY - element.getBoundingClientRect().top
-            };
-        }
-        e.preventDefault();
-    }
-
-    handleTouchMove(e) {
-        if (!this.touchStartElement) return;
-        
-        const touch = e.touches[0];
-        this.touchStartElement.style.position = 'fixed';
-        this.touchStartElement.style.zIndex = '1000';
-        this.touchStartElement.style.left = (touch.clientX - this.touchOffset.x) + 'px';
-        this.touchStartElement.style.top = (touch.clientY - this.touchOffset.y) + 'px';
-        this.touchStartElement.style.pointerEvents = 'none';
-        
-        // Encontrar el slot debajo del dedo
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
-        
-        // Remover highlight de todos los slots
-        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
-        
-        // Agregar highlight al slot actual
-        if (slot) {
-            slot.classList.add('drag-over');
-        }
-        
-        e.preventDefault();
-    }
-
-    handleTouchEnd(e) {
-        if (!this.touchStartElement) return;
-        
-        const touch = e.changedTouches[0];
-        const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-        const slot = elementBelow ? elementBelow.closest('.sequence-slot') : null;
-        
-        // Restaurar elemento
-        this.touchStartElement.style.position = '';
-        this.touchStartElement.style.zIndex = '';
-        this.touchStartElement.style.left = '';
-        this.touchStartElement.style.top = '';
-        this.touchStartElement.style.pointerEvents = '';
-        this.touchStartElement.classList.remove('dragging');
-        
-        // Remover highlight de todos los slots
-        document.querySelectorAll('.sequence-slot').forEach(s => s.classList.remove('drag-over'));
-        
-        // Procesar drop si hay slot válido
-        if (slot) {
-            const colorIndex = parseInt(this.touchStartElement.dataset.colorIndex);
-            const slotIndex = parseInt(slot.dataset.slotIndex);
-            this.dropColorInSlot(colorIndex, slotIndex, slot);
-        }
-        
-        this.touchStartElement = null;
-        this.touchOffset = null;
-        e.preventDefault();
     }
     
     handleDragStart(e) {
@@ -2074,11 +2120,18 @@ class ColorSequenceGame {
         const levelIndicator = document.querySelector('.level-indicator');
         
         if (this.gameStarted) {
+            // Agregar clase al body para ocultar footer durante el juego
+            document.body.classList.add('game-active');
+            document.body.classList.remove('instructions-active');
+            
             if (startScreen) startScreen.style.display = 'none';
             if (gameElements) gameElements.style.display = 'block';
             if (gameArea) gameArea.style.display = 'grid';
             if (levelIndicator) levelIndicator.style.display = 'block';
         } else {
+            // Remover todas las clases relacionadas con el juego cuando regresamos al inicio
+            document.body.classList.remove('game-active', 'instructions-active');
+            
             if (startScreen) startScreen.style.display = 'flex';
             if (gameElements) gameElements.style.display = 'none';
             if (gameArea) gameArea.style.display = 'none';
