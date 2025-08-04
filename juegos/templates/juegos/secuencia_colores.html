@@ -1700,8 +1700,9 @@ class ColorSequenceGame {
         const container = document.getElementById('sequenceSlots');
         container.innerHTML = '';
         
-        // Dificultad ajustada: empezar con 3, máximo 8
-        const sequenceLength = Math.min(this.level + 2, 8);
+        // Nueva progresión de dificultad: 2,2,3,3,4,4,5,5,6,6...
+        // Cada dificultad se repite 2 veces antes de avanzar
+        const sequenceLength = this.getDifficultyForLevel(this.level);
         this.userSequence = new Array(sequenceLength).fill(null);
         
         for (let i = 0; i < sequenceLength; i++) {
@@ -1749,8 +1750,8 @@ class ColorSequenceGame {
     }
     
     generateNewSequence() {
-        // Dificultad ajustada: empezar con 3, máximo 8
-        const sequenceLength = Math.min(this.level + 2, 8);
+        // Nueva progresión de dificultad: 2,2,3,3,4,4,5,5,6,6...
+        const sequenceLength = this.getDifficultyForLevel(this.level);
         this.currentSequence = [];
         this.errorCount = 0; // Resetear contador de errores para nueva secuencia
         
@@ -1760,7 +1761,11 @@ class ColorSequenceGame {
         }
         
         this.createSequenceSlots();
-        this.showFeedback('🌈 ¡Nueva secuencia de colores generada! Presiona el botón 🔊 para escucharla.', 'success');
+        
+        // Mostrar mensaje con información de dificultad
+        const difficulty = this.getDifficultyForLevel(this.level);
+        const difficultyMessage = `🌈 Nivel ${this.level}: Secuencia de ${difficulty} colores generada! Presiona 🔊 para escucharla.`;
+        this.showFeedback(difficultyMessage, 'success');
         
         // Auto-play después de 2 segundos
         clearTimeout(this.autoPlayTimeout);
@@ -1769,6 +1774,19 @@ class ColorSequenceGame {
                 this.playSequence();
             }
         }, 3000);
+    }
+
+    // Función para calcular la dificultad según el nivel
+    // Patrón: 2,2,3,3,4,4,5,5,6,6 (máximo 6)
+    getDifficultyForLevel(level) {
+        // Nivel 1-2: 2 colores
+        // Nivel 3-4: 3 colores  
+        // Nivel 5-6: 4 colores
+        // Nivel 7-8: 5 colores
+        // Nivel 9+: 6 colores (máximo)
+        
+        const baseDifficulty = Math.floor((level - 1) / 2) + 2;
+        return Math.min(baseDifficulty, 6);
     }
     
     async playSequence() {
@@ -1975,7 +1993,16 @@ class ColorSequenceGame {
             this.consecutiveCorrect++;
             this.updateScore();
             this.playGameSound('correct');
-            this.showFeedback(`🎉 ¡Excelente! ¡Ganaste ${this.level * 10} puntos!`, 'success');
+            
+            const currentDifficulty = this.getDifficultyForLevel(this.level);
+            const nextDifficulty = this.getDifficultyForLevel(this.level + 1);
+            
+            let message = `🎉 ¡Excelente! ¡Ganaste ${this.level * 10} puntos!`;
+            if (nextDifficulty > currentDifficulty) {
+                message += ` 🔥 ¡Siguiente nivel será más difícil!`;
+            }
+            
+            this.showFeedback(message, 'success');
             
             this.celebrateSuccess();
             
@@ -2002,15 +2029,22 @@ class ColorSequenceGame {
 
     nextLevel() {
         this.level++;
-        if (this.level > 15) {
+        // Juego completo después de nivel 12 (6 niveles de dificultad máxima)
+        if (this.level > 12) {
             this.completeGame();
         } else {
             this.generateNewSequence();
             this.updateLevel();
+            
+            // Mostrar mensaje de progresión de dificultad
+            const difficulty = this.getDifficultyForLevel(this.level);
+            const difficultyMessage = `🎯 Nivel ${this.level} - ${difficulty} colores en secuencia`;
+            this.showFeedback(difficultyMessage, 'info');
+            
             // Auto-reproducir siguiente secuencia
             setTimeout(() => {
                 this.playSequence();
-            }, 1000);
+            }, 2000);
         }
     }
 
