@@ -1,7 +1,21 @@
 {% extends 'juegos/base.html' %}
 {% load static %}
 
-{% block title %}🌈 Imaginamente - Juegos Educativos 🌈{% endblock %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block meta_keywords %}{{ meta_keywords }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block og_title %}{{ og_title }}{% endblock %}
+{% block og_description %}{{ og_description }}{% endblock %}
+{% block og_url %}{{ canonical_url }}{% endblock %}
+{% block og_image %}{{ og_image }}{% endblock %}
+
+{% block twitter_title %}{{ og_title }}{% endblock %}
+{% block twitter_description %}{{ og_description }}{% endblock %}
+{% block twitter_url %}{{ canonical_url }}{% endblock %}
+{% block twitter_image %}{{ og_image }}{% endblock %}
 
 {% block content %}
 <style>
@@ -213,7 +227,7 @@
 </style>
 
 <div class="welcome-section">
-    <h1 class="welcome-title">¡Bienvenidos a Imaginamente! 🎉</h1>
+    <h1 class="welcome-title">¡Bienvenidos a SecuKids! 🎉</h1>
     <p class="welcome-description">
         Descubre juegos educativos diseñados especialmente para que los más pequeños aprendan mientras se divierten. 
         ¡Cada juego es una nueva aventura llena de colores, sonidos y diversión! 🌈

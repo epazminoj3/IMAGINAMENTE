@@ -3,18 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}🌈 Mi Mundo Divertido - Juegos Educativos 🌈{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>{% block title %}🌈 SecuKids - Juegos Educativos Interactivos para Niños 🌈{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}SecuKids ofrece juegos educativos interactivos para niños: secuencia de animales, colores, rompecabezas y más. Desarrolla memoria y habilidades cognitivas jugando.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}juegos educativos, memoria para niños, juegos interactivos, educación infantil, desarrollo cognitivo, aprendizaje lúdico, secukids{% endblock %}">
+    <meta name="author" content="Universidad Técnica de Babahoyo - Estudiantes de Educación Inicial">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{% block canonical_url %}https://secukids.onrender.com/{% endblock %}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{% block og_url %}https://secukids.onrender.com/{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}SecuKids - Juegos Educativos Interactivos{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Plataforma educativa con juegos para desarrollar memoria, concentración y habilidades cognitivas en niños{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://secukids.onrender.com/static/images/secukids_logo.png{% endblock %}">
+    <meta property="og:site_name" content="SecuKids">
+    <meta property="og:locale" content="es_ES">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{% block twitter_url %}https://secukids.onrender.com/{% endblock %}">
+    <meta property="twitter:title" content="{% block twitter_title %}SecuKids - Juegos Educativos{% endblock %}">
+    <meta property="twitter:description" content="{% block twitter_description %}Juegos educativos interactivos para desarrollar habilidades cognitivas en niños{% endblock %}">
+    <meta property="twitter:image" content="{% block twitter_image %}https://secukids.onrender.com/static/images/secukids_logo.png{% endblock %}">
+    
+    <!-- Structured Data JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "SecuKids",
+        "description": "Plataforma educativa interactiva con juegos para el desarrollo cognitivo infantil",
+        "url": "https://secukids.onrender.com",
+        "logo": "https://secukids.onrender.com/static/images/secukids_logo.png",
+        "sameAs": [],
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "customer service",
+            "availableLanguage": "Spanish"
+        },
+        "foundingLocation": {
+            "@type": "Place",
+            "name": "Babahoyo, Ecuador"
+        },
+        "founder": {
+            "@type": "Organization",
+            "name": "Universidad Técnica de Babahoyo"
+        },
+        "educationalCredentialAwarded": "Proyecto Educativo",
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Juegos Educativos",
+            "itemListElement": [
+                {
+                    "@type": "Course",
+                    "name": "Secuencia de Animales",
+                    "description": "Juego para desarrollar memoria auditiva",
+                    "url": "https://secukids.onrender.com/secuencia-animales/"
+                },
+                {
+                    "@type": "Course", 
+                    "name": "Secuencia de Colores",
+                    "description": "Juego para desarrollar memoria visual",
+                    "url": "https://secukids.onrender.com/secuencia-colores/"
+                },
+                {
+                    "@type": "Course",
+                    "name": "Rompecabezas Interactivo", 
+                    "description": "Juego para desarrollar habilidades espaciales",
+                    "url": "https://secukids.onrender.com/rompecabezas/"
+                }
+            ]
+        }
+    }
+    </script>
     
     <!-- Favicon usando SVG inline -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
     
+    <!-- Preconnect para optimizar carga de fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
     {% load static %}
     
     <!-- Variables globales para JavaScript -->
     <script>
         window.STATIC_URL = "{% get_static_prefix %}";
     </script>
+    
+    {% comment %}
+    <!-- Incluir analytics cuando tengas los códigos -->
+    {% include 'juegos/analytics.html' %}
+    {% endcomment %}
     
     <style>
         * {
@@ -126,35 +211,32 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
             position: relative;
             min-height: 80px;
         }
         
         .nav-left {
             display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+        
+        .nav-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex: 1;
         }
         
         .nav-right {
             display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-            flex: 1;
-            justify-content: flex-end;
+            align-items: center;
+            flex: 0 0 auto;
         }
         
         .logo {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
             display: flex;
             align-items: center;
-            justify-content: center;
-            z-index: 2;
         }
         
         .logo a {
@@ -163,23 +245,42 @@
         }
         
         .logo-img {
-            height: clamp(80px, 12vw, 120px);
-            width: auto;
+            height: clamp(60px, 8vw, 80px);
+            width: clamp(60px, 8vw, 80px);
             object-fit: contain;
-            animation: bounce 2s infinite;
-            background: transparent;
             transition: all 0.3s ease;
             cursor: pointer;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
         
         .logo-img:hover {
             transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
         
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+        .site-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(2rem, 5vw, 3rem);
+            background: linear-gradient(45deg, #FF6B9D, #4ECDC4, #FFE066);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-decoration: none;
+            margin: 0;
+            animation: glow 3s ease-in-out infinite alternate;
+            text-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        }
+        
+        @keyframes glow {
+            0% {
+                filter: brightness(1);
+                transform: scale(1);
+            }
+            100% {
+                filter: brightness(1.1);
+                transform: scale(1.02);
+            }
         }
         
         .nav-links {
@@ -220,6 +321,28 @@
         /* Ocultar botón de juegos en páginas específicas de juegos */
         .hide-games-btn .nav-links a[href="#games-section"] {
             display: none;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav {
+                padding: 0 0.5rem;
+                min-height: 70px;
+            }
+            
+            .logo-img {
+                height: clamp(50px, 6vw, 60px);
+                width: clamp(50px, 6vw, 60px);
+            }
+            
+            .site-title {
+                font-size: clamp(1.5rem, 4vw, 2rem);
+            }
+            
+            .nav-links a {
+                padding: clamp(0.5rem, 2vw, 0.7rem) clamp(0.8rem, 2.5vw, 1.2rem);
+                font-size: clamp(0.8rem, 1.8vw, 1rem);
+            }
         }
         
         main {
@@ -677,19 +800,24 @@
     
     <header>
         <nav>
+            <!-- Logo a la izquierda -->
             <div class="nav-left">
-                <ul class="nav-links">
-                    <li><a href="{% url 'juegos:home' %}">🏠 CASA</a></li>
-                </ul>
+                <div class="logo">
+                    <a href="{% url 'juegos:home' %}">
+                        <img src="{% static 'images/secukids_logo.png' %}" alt="SecuKids Logo" class="logo-img">
+                    </a>
+                </div>
             </div>
-            <div class="logo">
-                <a href="{% url 'juegos:home' %}">
-                    <img src="{% static 'images/imaginamente_logo.png' %}" alt="Imaginamente Logo" class="logo-img">
-                </a>
+            
+            <!-- Título en el centro -->
+            <div class="nav-center">
+                <h1 class="site-title">SecuKids</h1>
             </div>
+            
+            <!-- Botón de casa a la derecha -->
             <div class="nav-right">
                 <ul class="nav-links">
-                    <li><a href="#games-section" onclick="scrollToGames()">🕹️ JUEGOS</a></li>
+                    <li><a href="{% url 'juegos:home' %}">🏠 CASA</a></li>
                 </ul>
             </div>
         </nav>
