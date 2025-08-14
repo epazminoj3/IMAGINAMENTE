@@ -15,6 +15,43 @@
 {% block twitter_description %}{{ og_description }}{% endblock %}
 {% block twitter_url %}{{ canonical_url }}{% endblock %}
 
+<!-- Schema markup específico para este juego -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Game",
+    "name": "Secuencia de Animales",
+    "description": "Juego educativo interactivo para desarrollar memoria auditiva y reconocimiento de sonidos de animales en niños",
+    "url": "https://secukids.onrender.com/secuencia-animales/",
+    "image": "https://secukids.onrender.com/static/images/secukids_logo.png",
+    "genre": "Educational Game",
+    "gamePlatform": "Web Browser",
+    "applicationCategory": "Educational",
+    "operatingSystem": "Any",
+    "isAccessibleForFree": true,
+    "inLanguage": "es",
+    "audience": {
+        "@type": "Audience",
+        "audienceType": "Children",
+        "suggestedMinAge": 3,
+        "suggestedMaxAge": 10
+    },
+    "educationalAlignment": {
+        "@type": "AlignmentObject",
+        "alignmentType": "teaches",
+        "educationalFramework": "Desarrollo Cognitivo Infantil",
+        "targetName": "Memoria Auditiva y Reconocimiento de Sonidos"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "SecuKids",
+        "url": "https://secukids.onrender.com"
+    },
+    "datePublished": "2024-01-01",
+    "dateModified": "2025-08-14"
+}
+</script>
+
 {% block content %}
 <style>
     .game-container {
